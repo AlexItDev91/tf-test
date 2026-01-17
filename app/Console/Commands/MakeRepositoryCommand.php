@@ -187,7 +187,6 @@ PHP;
 
     private function contractMethods(?string $modelClass): string
     {
-        // Базовый шаблон. Если передали --model, дадим читабельные методы-скелеты.
         if ($modelClass) {
             $model = $modelClass;
 
@@ -255,8 +254,6 @@ PHP;
 
         $model = $modelClass;
 
-        // Для шаблона делаем кеш на findById + инвалидацию на create/update/delete.
-        // TTL небольшой, ключи простые (без tags).
         return
             "    public function findOrFail(int \$id): {$model}
     {
@@ -337,7 +334,6 @@ PHP;
             return;
         }
 
-        // Вставляем перед закрывающей ]
         $content = preg_replace(
             '/\];\s*$/',
             "    App\\Providers\\RepositoryServiceProvider::class,\n];",
@@ -366,7 +362,7 @@ PHP;
         $cached = "\\App\\Repositories\\Implementations\\Cached\\{$repositoryName}";
 
         if (str_contains($content, $contract)) {
-            return; // binding уже есть
+            return;
         }
 
         $binding = $withCache
@@ -399,7 +395,7 @@ PHP;
     {
         $providerPath = app_path('Providers/RepositoryServiceProvider.php');
 
-        if (!File::exists($providerPath)) {
+        if (! File::exists($providerPath)) {
             File::ensureDirectoryExists(app_path('Providers'));
 
             File::put($providerPath, $this->repositoryServiceProviderStub());
