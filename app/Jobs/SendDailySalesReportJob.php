@@ -26,10 +26,10 @@ class SendDailySalesReportJob implements ShouldQueue
         Mail::to((string) config('shop.admin_email', 'admin@example.test'))
             ->send(new DailySalesReportMail(
                 date: $this->dateYmd,
-                ordersCount: (int) $data['ordersCount'],
-                itemsCount: (int) $data['itemsCount'],
-                totalCents: (int) $data['totalCents'],
-                lines: (array) $data['lines'],
+                ordersCount: $data->getOrdersCount(),
+                itemsCount: $data->getItemsCount(),
+                totalCents: $data->getTotalCents(),
+                lines: $data->getLines(),
             ));
     }
 }

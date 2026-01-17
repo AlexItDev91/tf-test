@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Contracts;
 
+use App\DTOs\DailySalesReportDto;
 use App\Enums\SaleStatus;
 use App\Models\Sale;
 use Illuminate\Database\Eloquent\Collection;
-use JetBrains\PhpStorm\ArrayShape;
 
 interface SaleRepositoryContract
 {
@@ -21,11 +21,5 @@ interface SaleRepositoryContract
 
     public function getById(int $saleId): ?Sale;
 
-    #[ArrayShape([
-        'ordersCount' => 'int',
-        'itemsCount' => 'int',
-        'totalCents' => 'int',
-        'lines' => 'array',
-    ])]
-    public function dailyReport(string $dateYmd): array;
+    public function dailyReport(string $dateYmd): DailySalesReportDto;
 }

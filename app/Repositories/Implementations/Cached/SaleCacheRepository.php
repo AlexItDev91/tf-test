@@ -2,12 +2,12 @@
 
 namespace App\Repositories\Implementations\Cached;
 
+use App\DTOs\DailySalesReportDto;
 use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
-use JetBrains\PhpStorm\ArrayShape;
 
 class SaleCacheRepository implements SaleRepositoryContract
 {
@@ -67,13 +67,7 @@ class SaleCacheRepository implements SaleRepositoryContract
         return "sale:id:{$saleId}";
     }
 
-    #[ArrayShape([
-        'ordersCount' => 'int',
-        'itemsCount' => 'int',
-        'totalCents' => 'int',
-        'lines' => 'array',
-    ])]
-    public function dailyReport(string $dateYmd): array
+    public function dailyReport(string $dateYmd): DailySalesReportDto
     {
         return $this->inner->dailyReport($dateYmd);
     }

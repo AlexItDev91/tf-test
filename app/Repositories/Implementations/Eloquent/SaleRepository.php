@@ -2,12 +2,12 @@
 
 namespace App\Repositories\Implementations\Eloquent;
 
+use App\DTOs\DailySalesReportDto;
 use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use JetBrains\PhpStorm\ArrayShape;
 
 class SaleRepository implements SaleRepositoryContract
 {
@@ -54,13 +54,7 @@ class SaleRepository implements SaleRepositoryContract
         return Sale::query()->find($saleId);
     }
 
-    #[ArrayShape([
-        'ordersCount' => 'int',
-        'itemsCount' => 'int',
-        'totalCents' => 'int',
-        'lines' => 'array',
-    ])]
-    public function dailyReport(string $dateYmd): array
+    public function dailyReport(string $dateYmd): DailySalesReportDto
     {
         $ordersCount = Sale::query()
             ->whereDate('created_at', $dateYmd)
@@ -93,11 +87,11 @@ class SaleRepository implements SaleRepositoryContract
             ])
             ->all();
 
-        return [
-            'ordersCount' => $ordersCount,
-            'itemsCount' => $itemsCount,
-            'totalCents' => $totalCents,
-            'lines' => $lines,
-        ];
+        return new DailySalesReportDto(
+            ordersCount: $ordersCount,
+            itemsCount: $itemsCount,
+            totalCents: $totalCents,
+            lines: $lines,
+        );
     }
 }
