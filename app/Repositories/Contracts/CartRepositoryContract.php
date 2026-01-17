@@ -24,5 +24,5 @@ interface CartRepositoryContract
 
     public function clear(int $cartId): void;
 
-    public function calculateTotalCents(int $cartId): string;
+    public function calculateTotalCents(int $cartId): int;
 }

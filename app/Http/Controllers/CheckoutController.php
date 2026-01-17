@@ -18,12 +18,18 @@ class CheckoutController extends Controller
      */
     public function store(CheckoutRequest $request): JsonResponse
     {
-        $sale = $this->checkoutService->checkout(auth()->id());
+        try {
+            $sale = $this->checkoutService->checkout(auth()->id());
 
-        return response()->json([
-            'sale_id' => (int) $sale->id,
-            'status' => (string) $sale->status,
-            'total_cents' => (int) $sale->total_cents,
-        ]);
+            return response()->json([
+                'sale_id' => (int) $sale->id,
+                'status' => (string) $sale->status,
+                'total_cents' => (int) $sale->total_cents,
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
     }
 }
