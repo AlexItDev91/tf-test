@@ -23,16 +23,28 @@ class SaleItemRepository implements SaleItemRepositoryContract
 
     public function bulkCreate(int $saleId, array $items): void
     {
+        $now = now();
+
+        $rows = [];
+
         foreach ($items as $item) {
-            SaleItem::query()->create([
+            $rows[] = [
                 'sale_id' => $saleId,
-                'product_id' => $item['product_id'],
-                'product_name' => $item['product_name'],
-                'unit_price_cents' => $item['unit_price_cents'],
-                'quantity' => $item['quantity'],
-                'line_total_cents' => $item['line_total_cents'],
-            ]);
+                'product_id' => (int) $item['product_id'],
+                'product_name' => (string) $item['product_name'],
+                'unit_price_cents' => (int) $item['unit_price_cents'],
+                'quantity' => (int) $item['quantity'],
+                'line_total_cents' => (int) $item['line_total_cents'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
+
+        if ($rows === []) {
+            return;
+        }
+
+        SaleItem::query()->insert($rows);
     }
 
     public function deleteBySaleId(int $saleId): void

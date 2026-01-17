@@ -16,7 +16,7 @@ class SaleItemCacheRepository implements SaleItemRepositoryContract
     public function getBySaleId(int $saleId): Collection
     {
         return Cache::remember(
-            $this->keyItems($saleId),
+            $this->cacheKeyBySaleId($saleId),
             now()->addMinutes(10),
             fn () => $this->inner->getBySaleId($saleId)
         );
@@ -25,7 +25,10 @@ class SaleItemCacheRepository implements SaleItemRepositoryContract
     public function create(array $data): SaleItem
     {
         $item = $this->inner->create($data);
-        Cache::forget($this->keyItems((int) $data['sale_id']));
+
+        if (isset($data['sale_id'])) {
+            Cache::forget($this->cacheKeyBySaleId((int) $data['sale_id']));
+        }
 
         return $item;
     }
@@ -33,17 +36,19 @@ class SaleItemCacheRepository implements SaleItemRepositoryContract
     public function bulkCreate(int $saleId, array $items): void
     {
         $this->inner->bulkCreate($saleId, $items);
-        Cache::forget($this->keyItems($saleId));
+
+        Cache::forget($this->cacheKeyBySaleId($saleId));
     }
 
     public function deleteBySaleId(int $saleId): void
     {
         $this->inner->deleteBySaleId($saleId);
-        Cache::forget($this->keyItems($saleId));
+
+        Cache::forget($this->cacheKeyBySaleId($saleId));
     }
 
-    private function keyItems(int $saleId): string
+    private function cacheKeyBySaleId(int $saleId): string
     {
-        return "sale:{$saleId}:items";
+        return "sale_items:sale:{$saleId}";
     }
 }
