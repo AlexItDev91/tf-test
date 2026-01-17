@@ -1,0 +1,20 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/Users/alexanderkudria/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Users/alexanderkudria/Projects/tftest/artisan",
+                "boost:mcp"
+            ]
+        },
+        "herd": {
+            "command": "/Users/alexanderkudria/Library/Application Support/Herd/bin/php84",
+            "args": [
+                "/Applications/Herd.app/Contents/Resources/herd-mcp.phar"
+            ],
+            "env": {
+                "SITE_PATH": "/Users/alexanderkudria/Projects/tftest"
+            }
+        }
+    }
+}
