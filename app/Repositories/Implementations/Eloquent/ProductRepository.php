@@ -2,9 +2,11 @@
 
 namespace App\Repositories\Implementations\Eloquent;
 
+use App\Events\ProductStockChanged;
 use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryContract;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProductRepository implements ProductRepositoryContract
 {
@@ -55,8 +57,22 @@ class ProductRepository implements ProductRepositoryContract
         $updated = Product::query()
             ->whereKey($productId)
             ->where('stock', '>=', $quantity)
-            ->decrement('stock', $quantity);
+            ->update([
+                'stock' => DB::raw("stock - {$quantity}"),
+            ]);
 
-        return $updated === 1;
+        if ($updated !== 1) {
+            return false;
+        }
+
+        $product = Product::query()->find($productId);
+
+        event(new ProductStockChanged(
+            product: $product,
+            previousStock: $product->stock + $quantity,
+            newStock: $product->stock,
+        ));
+
+        return true;
     }
 }
