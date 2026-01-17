@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class MakeRepositoryCommand extends Command
 {
-    protected $signature = 'make:repository
+    protected $signature = 'make:app-repository
         {name : Repository name (e.g. ProductRepository or Product)}
         {--model= : Optional model class name (e.g. Product)}
         {--no-cache : Do not generate Cached implementation}

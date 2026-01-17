@@ -45,3 +45,38 @@ function something()
 {
     // ..
 }
+function cleanupRepositoryFiles(string $name): void
+{
+    $files = [
+        app_path("Repositories/Contracts/{$name}RepositoryContract.php"),
+        app_path("Repositories/Implementations/Eloquent/{$name}Repository.php"),
+        app_path("Repositories/Implementations/Cached/{$name}CacheRepository.php"),
+    ];
+
+    foreach ($files as $file) {
+        if (File::exists($file)) {
+            File::delete($file);
+        }
+    }
+}
+
+function backupRepositoryServiceProvider(): void
+{
+    $path = app_path('Providers/RepositoryServiceProvider.php');
+    $bak = $path . '.pest.bak';
+
+    if (File::exists($path) && ! File::exists($bak)) {
+        File::copy($path, $bak);
+    }
+}
+
+function restoreRepositoryServiceProvider(): void
+{
+    $path = app_path('Providers/RepositoryServiceProvider.php');
+    $bak = $path . '.pest.bak';
+
+    if (File::exists($bak)) {
+        File::copy($bak, $path);
+        File::delete($bak);
+    }
+}
