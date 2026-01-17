@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\SaleItemDataDto;
 use App\Enums\SaleStatus;
 use App\Exceptions\CartEmptyException;
+use App\Exceptions\InsufficientStockException;
 use App\Models\CartItem;
 use App\Models\Sale;
 use App\Repositories\Contracts\CartRepositoryContract;
@@ -58,7 +59,7 @@ class CheckoutService
                 $ok = $this->productRepository->decrementStockIfAvailable($product->id, $qty);
 
                 if (! $ok) {
-                    throw new RuntimeException("Not enough stock for product {$product->id}");
+                    throw new InsufficientStockException((int) $product->id);
                 }
 
                 $unitCents = (int) $product->price_cents;
