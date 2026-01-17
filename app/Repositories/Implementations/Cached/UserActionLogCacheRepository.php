@@ -4,6 +4,7 @@ namespace App\Repositories\Implementations\Cached;
 
 use App\Enums\UserAction;
 use App\Repositories\Contracts\UserActionLogRepositoryContract;
+use Illuminate\Database\Eloquent\Model;
 
 class UserActionLogCacheRepository implements UserActionLogRepositoryContract
 {
@@ -13,9 +14,10 @@ class UserActionLogCacheRepository implements UserActionLogRepositoryContract
 
     public function log(
         int $userId,
-        UserAction $action,
-        array $context = []
+        UserAction|string $action,
+        ?Model $subject = null,
+        array $metadata = []
     ): void {
-        $this->inner->log($userId, $action, $context);
+        $this->inner->log($userId, $action, $subject, $metadata);
     }
 }

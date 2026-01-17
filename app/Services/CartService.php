@@ -46,10 +46,14 @@ class CartService
 
         $this->cartRepository->incrementItemQuantity($cart->id, $productId, $quantity);
 
-        $this->userActionLogRepository->log($userId, UserAction::CART_ADD, [
-            'product_id' => $productId,
-            'quantity' => $quantity,
-        ]);
+        $this->userActionLogRepository->log(
+            userId: $userId,
+            action: UserAction::CART_ADD,
+            subject: $cart,
+            metadata: [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+            ]);
     }
 
     public function updateQuantity(int $userId, int $productId, int $quantity): void
@@ -62,7 +66,7 @@ class CartService
             $this->cartRepository->upsertItemQuantity($cart->id, $productId, $quantity);
         }
 
-        $this->userActionLogRepository->log($userId, UserAction::CART_UPDATE_QUANTITY, [
+        $this->userActionLogRepository->log($userId, UserAction::CART_UPDATE_QUANTITY, $cart, [
             'product_id' => $productId,
             'quantity' => $quantity,
         ]);
@@ -74,7 +78,7 @@ class CartService
 
         $this->cartRepository->removeItem($cart->id, $productId);
 
-        $this->userActionLogRepository->log($userId, UserAction::CART_REMOVE, [
+        $this->userActionLogRepository->log($userId, UserAction::CART_REMOVE, $cart, [
             'product_id' => $productId,
         ]);
     }
@@ -85,7 +89,7 @@ class CartService
 
         $this->cartRepository->clear($cart->id);
 
-        $this->userActionLogRepository->log($userId, UserAction::CART_CLEAR);
+        $this->userActionLogRepository->log($userId, UserAction::CART_CLEAR, $cart);
     }
 
     public function totalCents(int $userId): int

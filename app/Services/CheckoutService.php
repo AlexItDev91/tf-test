@@ -84,7 +84,7 @@ class CheckoutService
 
             $this->cartRepository->clear($cart->id);
 
-            $this->userActionLogRepository->log($userId, UserAction::CHECKOUT_SUCCESS, [
+            $this->userActionLogRepository->log($userId, UserAction::CHECKOUT_SUCCESS, $sale, [
                 'sale_id' => (int) $sale->id,
                 'total_cents' => $totalCents,
             ]);

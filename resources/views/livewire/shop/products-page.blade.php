@@ -20,14 +20,30 @@
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    class="rounded-md bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
-                    wire:click="addToCart({{ (int) $product->id }})"
-                    @disabled(((int) $product->stock) <= 0)
-                >
-                    Add
-                </button>
+                @php($disabled = ((int) $product->stock) <= 0)
+
+                @if(auth()->guest())
+                    <flux:modal.trigger name="auth-notification">
+                        <flux:button
+                            type="button"
+                            variant="filled"
+                            class="bg-black text-white disabled:opacity-50"
+                            :disabled="$disabled"
+                        >
+                            Add
+                        </flux:button>
+                    </flux:modal.trigger>
+                @else
+                    <flux:button
+                        type="button"
+                        variant="filled"
+                        class="bg-black text-white disabled:opacity-50"
+                        wire:click="addToCart({{ (int) $product->id }})"
+                        :disabled="$disabled"
+                    >
+                        Add
+                    </flux:button>
+                @endif
             </div>
         @empty
             <div class="rounded-lg border p-4 text-gray-600">
@@ -35,4 +51,30 @@
             </div>
         @endforelse
     </div>
+
+        <flux:modal name="auth-notification" class="max-w-xl w-full">
+            <div class="space-y-6 p-6">
+                <div>
+                    <flux:heading size="lg">Notification</flux:heading>
+                    <flux:subheading>
+                        Sign in to add products to your cart and place orders.
+                    </flux:subheading>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <a href="{{ route('login') }}">
+                        <flux:button variant="ghost">Login</flux:button>
+                    </a>
+
+                    <flux:button
+                        type="button"
+                        variant="filled"
+                        x-data
+                        x-on:click="$flux.modal('auth-notification').close()"
+                    >
+                        Close
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
 </div>

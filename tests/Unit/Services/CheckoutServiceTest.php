@@ -163,7 +163,7 @@ it('logs checkout success', function () {
 
     $userActionLogRepository->shouldReceive('log')
         ->once()
-        ->with($userId, UserAction::CHECKOUT_SUCCESS, [
+        ->with($userId, UserAction::CHECKOUT_SUCCESS, $sale, [
             'sale_id' => 500,
             'total_cents' => 2000,
         ]);

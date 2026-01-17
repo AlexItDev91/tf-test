@@ -14,9 +14,9 @@ class SaleShowPage extends Component
 {
     public Sale $sale;
 
-    public function mount(SaleService $saleService, int $sale): void
+    public function mount(SaleService $saleService, Sale $sale): void
     {
-        $this->sale = $saleService->getForUserWithItems((int) auth()->id(), $sale);
+        $this->sale = $saleService->getForUserWithItems((int) auth()->id(), $sale->id);
     }
 
     public function render(): Factory|View
