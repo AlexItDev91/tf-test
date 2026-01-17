@@ -4,6 +4,7 @@ namespace App\Repositories\Implementations\Cached;
 
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
+use Illuminate\Support\Facades\Cache;
 
 class SaleCacheRepository implements SaleRepositoryContract
 {
@@ -16,23 +17,31 @@ class SaleCacheRepository implements SaleRepositoryContract
         return $this->inner->createPending($userId);
     }
 
-    public function addItems(int $saleId, array $items): void
+    public function updateTotalCents(int $saleId, int $totalCents): void
     {
-        $this->inner->addItems($saleId, $items);
+        $this->inner->updateTotalCents($saleId, $totalCents);
+
+        Cache::forget($this->cacheKey($saleId));
     }
 
     public function setStatus(int $saleId, string $status): void
     {
         $this->inner->setStatus($saleId, $status);
+
+        Cache::forget($this->cacheKey($saleId));
     }
 
     public function getWithItems(int $saleId): ?Sale
     {
-        return $this->inner->getWithItems($saleId);
+        return Cache::remember(
+            $this->cacheKey($saleId),
+            now()->addMinutes(10),
+            fn () => $this->inner->getWithItems($saleId)
+        );
     }
 
-    public function updateTotalCents(int $saleId, int $totalCents): void
+    private function cacheKey(int $saleId): string
     {
-        $this->inner->updateTotalCents($saleId, $totalCents);
+        return "sale:with_items:{$saleId}";
     }
 }
