@@ -20,30 +20,33 @@ test('it can get sale items by sale id', function () {
 
 test('it can create a sale item', function () {
     $sale = Sale::factory()->create();
+    $product = \App\Models\Product::factory()->create();
     $data = [
         'sale_id' => $sale->id,
-        'product_id' => 1,
-        'product_name' => 'Test Product',
-        'unit_price_cents' => 100,
+        'product_id' => $product->id,
+        'product_name' => $product->name,
+        'unit_price_cents' => $product->price_cents,
         'quantity' => 1,
-        'line_total_cents' => 100,
+        'line_total_cents' => $product->price_cents,
     ];
 
     $item = $this->repository->create($data);
 
-    expect($item->product_name)->toBe('Test Product');
-    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_name' => 'Test Product']);
+    expect($item->product_name)->toBe($product->name);
+    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_id' => $product->id]);
 });
 
 test('it can bulk create sale items', function () {
     $sale = Sale::factory()->create();
-    $dto1 = new SaleItemDataDto(1, 'Product 1', 100, 2, 200);
-    $dto2 = new SaleItemDataDto(2, 'Product 2', 50, 4, 200);
+    $product1 = \App\Models\Product::factory()->create(['name' => 'Product 1']);
+    $product2 = \App\Models\Product::factory()->create(['name' => 'Product 2']);
+    $dto1 = new SaleItemDataDto($product1->id, 'Product 1', 100, 2, 200);
+    $dto2 = new SaleItemDataDto($product2->id, 'Product 2', 50, 4, 200);
 
     $this->repository->bulkCreate($sale->id, [$dto1, $dto2]);
 
-    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_name' => 'Product 1']);
-    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_name' => 'Product 2']);
+    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_id' => $product1->id]);
+    $this->assertDatabaseHas('sale_items', ['sale_id' => $sale->id, 'product_id' => $product2->id]);
     expect(SaleItem::where('sale_id', $sale->id)->count())->toBe(2);
 });
 
