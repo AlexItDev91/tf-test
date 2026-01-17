@@ -25,6 +25,7 @@ class Product extends Model
         'price_cents',
         'stock',
         'is_active',
+        'id',
     ];
 
     protected $casts = [
