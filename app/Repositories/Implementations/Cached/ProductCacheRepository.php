@@ -3,11 +3,11 @@
 namespace App\Repositories\Implementations\Cached;
 
 use App\Models\Product;
-use App\Repositories\Contracts\ProductRepository as ProductRepositoryContract;
+use App\Repositories\Contracts\ProductRepositoryContract;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
-class ProductRepository implements ProductRepositoryContract
+class ProductCacheRepository implements ProductRepositoryContract
 {
     public function __construct(
         private readonly ProductRepositoryContract $inner

@@ -3,7 +3,7 @@
 namespace App\Repositories\Implementations\Eloquent;
 
 use App\Models\Product;
-use App\Repositories\Contracts\ProductRepository as ProductRepositoryContract;
+use App\Repositories\Contracts\ProductRepositoryContract;
 use Illuminate\Support\Collection;
 
 class ProductRepository implements ProductRepositoryContract

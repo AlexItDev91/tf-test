@@ -5,7 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Product;
 use Illuminate\Support\Collection;
 
-interface ProductRepository
+interface ProductRepositoryContract
 {
     public function findOrFail(int $id): Product;
 
