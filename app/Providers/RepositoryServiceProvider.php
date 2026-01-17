@@ -9,11 +9,19 @@ use App\Repositories\Implementations\Cached\ProductCacheRepository;
 use App\Repositories\Implementations\Eloquent\CartRepository;
 use App\Repositories\Implementations\Eloquent\ProductRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repositories\Contracts\SaleRepositoryContract;
+use App\Repositories\Implementations\Eloquent\SaleRepository;
+use App\Repositories\Implementations\Cached\SaleCacheRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(SaleRepositoryContract::class, function ($app) {
+            return new SaleCacheRepository(
+                $app->make(SaleRepository::class)
+            );
+        });
         $this->app->bind(CartRepositoryContract::class, function ($app) {
             return new CartCacheRepository(
                 $app->make(CartRepository::class)
