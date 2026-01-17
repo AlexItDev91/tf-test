@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
 
             $table->string('name');
-            $table->decimal('price', 12, 2);
+            $table->unsignedInteger('price_cents');
             $table->unsignedInteger('stock')->default(0); // количество на складе
 
             $table->boolean('is_active')->default(true);

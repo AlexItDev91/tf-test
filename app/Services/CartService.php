@@ -87,10 +87,10 @@ class CartService
         $this->userActionLogRepository->log($userId, 'cart.clear');
     }
 
-    public function total(int $userId): string
+    public function totalCents(int $userId): string
     {
         $cart = $this->getCart($userId);
 
-        return $this->cartRepository->calculateTotal($cart->id);
+        return $this->cartRepository->calculateTotalCents($cart->id);
     }
 }

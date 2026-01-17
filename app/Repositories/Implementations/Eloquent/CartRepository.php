@@ -87,14 +87,14 @@ class CartRepository implements CartRepositoryContract
         CartItem::query()->where('cart_id', $cartId)->delete();
     }
 
-    public function calculateTotal(int $cartId): string
+    public function calculateTotalCents(int $cartId): int
     {
         $total = CartItem::query()
             ->where('cart_id', $cartId)
             ->join('products', 'products.id', '=', 'cart_items.product_id')
-            ->selectRaw('COALESCE(SUM(products.price * cart_items.quantity), 0) AS total')
-            ->value('total');
+            ->selectRaw('COALESCE(SUM(products.price_cents * cart_items.quantity), 0) AS total_cents')
+            ->value('total_cents');
 
-        return number_format((float) ($total ?? 0), 2, '.', '');
+        return (int) ($total ?? 0);
     }
 }

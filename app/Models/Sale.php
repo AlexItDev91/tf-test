@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $user_id
  * @property string $status
- * @property string $total
+ * @property string $total_cents
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
@@ -23,11 +23,11 @@ class Sale extends Model
     protected $fillable = [
         'user_id',
         'status',
-        'total',
+        'total_cents',
     ];
 
     protected $casts = [
-        'total' => 'decimal:2',
+        'total_cents' => 'integer',
     ];
 
     public function user(): BelongsTo

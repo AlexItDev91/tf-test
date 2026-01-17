@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $sale_id
  * @property int $product_id
  * @property string $product_name
- * @property string $unit_price
+ * @property string $unit_price_cents
  * @property int $quantity
- * @property string $line_total
+ * @property string $line_total_cents
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
@@ -25,14 +25,14 @@ class SaleItem extends Model
         'sale_id',
         'product_id',
         'product_name',
-        'unit_price',
+        'unit_price_cents',
         'quantity',
-        'line_total',
+        'line_total_cents',
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'line_total' => 'decimal:2',
+        'unit_price_cents' => 'integer',
+        'line_total_cents' => 'integer',
         'quantity' => 'integer',
     ];
 

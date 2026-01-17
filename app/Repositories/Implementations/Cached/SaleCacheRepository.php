@@ -4,6 +4,7 @@ namespace App\Repositories\Implementations\Cached;
 
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
+use Illuminate\Support\Facades\Cache;
 
 class SaleCacheRepository implements SaleRepositoryContract
 {
@@ -34,5 +35,12 @@ class SaleCacheRepository implements SaleRepositoryContract
     public function getWithItems(int $saleId): ?Sale
     {
         return $this->inner->getWithItems($saleId);
+    }
+
+    public function updateTotalCents(int $saleId, int $totalCents): void
+    {
+        $this->inner->updateTotalCents($saleId, $totalCents);
+
+        Cache::forget($saleId);
     }
 }

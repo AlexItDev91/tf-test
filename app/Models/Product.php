@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property string $name
- * @property string $price
+ * @property string $price_cents
  * @property int $stock
  * @property bool $is_active
  * @property Carbon $created_at
@@ -19,13 +19,13 @@ class Product extends Model
 {
     protected $fillable = [
         'name',
-        'price',
+        'price_cents',
         'stock',
         'is_active',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
+        'price_cents' => 'integer',
         'stock' => 'integer',
         'is_active' => 'boolean',
     ];

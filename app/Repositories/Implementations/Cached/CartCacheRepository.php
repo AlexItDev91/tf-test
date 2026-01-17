@@ -78,12 +78,12 @@ class CartCacheRepository implements CartRepositoryContract
         $this->flushCartComputed($cartId);
     }
 
-    public function calculateTotal(int $cartId): string
+    public function calculateTotalCents(int $cartId): string
     {
         return Cache::remember(
             $this->keyCartTotal($cartId),
             now()->addMinutes(5),
-            fn () => $this->inner->calculateTotal($cartId)
+            fn () => $this->inner->calculateTotalCents($cartId)
         );
     }
 

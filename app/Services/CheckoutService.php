@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Repositories\Contracts\CartRepositoryContract;
@@ -39,45 +40,49 @@ class CheckoutService
             $sale = $this->saleRepository->createPending($userId);
 
             $saleItems = [];
-            $total = 0.0;
+            $totalCents = 0;
 
+            /** @var CartItem|null $item */
             foreach ($items as $item) {
-                /** @var Product|null $product */
+
                 $product = $item->product;
 
                 if (! $product) {
                     throw new RuntimeException('Product not available');
                 }
 
-                $ok = $this->productRepository->decrementStockIfAvailable($product->id, $item->quantity);
+                $qty = (int) $item->quantity;
+
+                $ok = $this->productRepository->decrementStockIfAvailable($product->id, $qty);
 
                 if (! $ok) {
-                    throw new RuntimeException("Not enough stock for product $product->id");
+                    throw new RuntimeException("Not enough stock for product {$product->id}");
                 }
 
-                $unitPrice = (float) $product->price;
-                $lineTotal = $unitPrice * (int) $item->quantity;
-                $total += $lineTotal;
+                $unitCents = (int) $product->price_cents;
+                $lineCents = $unitCents * $qty;
+
+                $totalCents += $lineCents;
 
                 $saleItems[] = [
-                    'product_id' => $product->id,
-                    'product_name' => $product->name,
-                    'unit_price' => number_format($unitPrice, 2, '.', ''),
-                    'quantity' => (int) $item->quantity,
-                    'line_total' => number_format($lineTotal, 2, '.', ''),
+                    'product_id' => (int) $product->id,
+                    'product_name' => (string) $product->name,
+                    'unit_price_cents' => $unitCents,
+                    'quantity' => $qty,
+                    'line_total_cents' => $lineCents,
                 ];
             }
 
             $this->saleItemRepository->bulkCreate($sale->id, $saleItems);
 
-            $this->saleRepository->updateTotal($sale->id, number_format($total, 2, '.', ''));
+            $this->saleRepository->updateTotalCents($sale->id, $totalCents);
             $this->saleRepository->setStatus($sale->id, 'paid');
 
             $this->cartRepository->clear($cart->id);
 
             $this->userActionLogRepository->log($userId, 'checkout.success', [
-                'sale_id' => $sale->id,
-                'total' => number_format($total, 2, '.', ''),
+                'sale_id' => (int) $sale->id,
+                'total_cents' => $totalCents,
             ]);
 
             return $this->saleRepository->getWithItems($sale->id) ?? $sale;

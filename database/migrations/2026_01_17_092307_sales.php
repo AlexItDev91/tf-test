@@ -17,8 +17,7 @@ return new class extends Migration
                 ->nullOnDelete();
 
             $table->string('status', 32)->default('pending');
-            $table->decimal('total', 12, 2)->default(0);
-
+            $table->unsignedInteger('total_cents')->default(0);
             $table->timestamps();
 
             $table->index(['user_id', 'status']);

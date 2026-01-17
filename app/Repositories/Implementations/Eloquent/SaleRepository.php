@@ -13,7 +13,7 @@ class SaleRepository implements SaleRepositoryContract
         return Sale::query()->create([
             'user_id' => $userId,
             'status' => 'pending',
-            'total' => 0,
+            'total_cents' => 0,
         ]);
     }
 
@@ -24,9 +24,9 @@ class SaleRepository implements SaleRepositoryContract
                 'sale_id' => $saleId,
                 'product_id' => $item['product_id'],
                 'product_name' => $item['product_name'],
-                'unit_price' => $item['unit_price'],
+                'unit_price_cents' => $item['unit_price_cents'],
                 'quantity' => $item['quantity'],
-                'line_total' => $item['line_total'],
+                'line_total_cents' => $item['line_total_cents'],
             ]);
         }
     }
@@ -47,5 +47,12 @@ class SaleRepository implements SaleRepositoryContract
             ->with('items')
             ->whereKey($saleId)
             ->first();
+    }
+
+    public function updateTotalCents(int $saleId, int $totalCents): void
+    {
+        Sale::query()
+            ->whereKey($saleId)
+            ->update(['total_cents' => $totalCents]);
     }
 }

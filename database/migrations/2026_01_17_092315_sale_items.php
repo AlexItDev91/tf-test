@@ -20,10 +20,9 @@ return new class extends Migration
                 ->restrictOnDelete();
 
             $table->string('product_name');
-            $table->decimal('unit_price', 12, 2);
             $table->unsignedInteger('quantity');
-
-            $table->decimal('line_total', 12, 2);
+            $table->unsignedInteger('unit_price_cents');
+            $table->unsignedInteger('line_total_cents');
 
             $table->timestamps();
 
