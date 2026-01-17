@@ -18,18 +18,17 @@ class MakeRepositoryCommand extends Command
 
     public function handle(): int
     {
-        $baseName = Str::studly($this->argument('name'));
+        $inputName = Str::studly($this->argument('name'));
+        $baseName = $this->normalizeBaseName($inputName);
 
-        if (Str::endsWith($baseName, 'Repository')) {
-            $baseName = Str::beforeLast($baseName, 'Repository');
-        }
-
-        $repositoryName = $baseName.'Repository';
+        $repositoryClass = $baseName . 'Repository';
+        $contractClass = $baseName . 'RepositoryContract';
+        $cacheClass = $baseName . 'CacheRepository';
 
         $model = $this->option('model');
         $modelClass = $model ? Str::studly($model) : null;
 
-        $paths = $this->paths($repositoryName);
+        $paths = $this->paths($baseName);
 
         $force = (bool) $this->option('force');
         $withCache = ! $this->option('no-cache');
@@ -40,20 +39,20 @@ class MakeRepositoryCommand extends Command
 
         $created += $this->writeFile(
             $paths['contract'],
-            $this->buildContract($repositoryName, $modelClass),
+            $this->buildContract($contractClass, $modelClass),
             $force
         );
 
         $created += $this->writeFile(
             $paths['eloquent'],
-            $this->buildEloquentImplementation($repositoryName, $modelClass),
+            $this->buildEloquentImplementation($repositoryClass, $contractClass, $modelClass),
             $force
         );
 
         if ($withCache) {
             $created += $this->writeFile(
                 $paths['cached'],
-                $this->buildCachedImplementation($repositoryName, $modelClass),
+                $this->buildCachedImplementation($cacheClass, $contractClass, $modelClass),
                 $force
             );
         }
@@ -62,28 +61,47 @@ class MakeRepositoryCommand extends Command
             $this->info('Nothing to do (all files already exist). Use --force to overwrite.');
         } else {
             $this->info('Repository generated:');
-            $this->line(' - '.$this->relative($paths['contract']));
-            $this->line(' - '.$this->relative($paths['eloquent']));
+            $this->line(' - ' . $this->relative($paths['contract']));
+            $this->line(' - ' . $this->relative($paths['eloquent']));
             if ($withCache) {
-                $this->line(' - '.$this->relative($paths['cached']));
+                $this->line(' - ' . $this->relative($paths['cached']));
             }
-
-            $this->newLine();
-            $this->comment('Binding example (RepositoryServiceProvider):');
         }
 
         $this->ensureRepositoryServiceProviderExists();
-        $this->appendBindingToRepositoryServiceProvider($repositoryName, $withCache);
+        $this->appendBindingToRepositoryServiceProvider($baseName, $withCache);
 
         return self::SUCCESS;
     }
 
-    private function paths(string $repositoryName): array
+    private function normalizeBaseName(string $inputName): string
     {
+        $baseName = $inputName;
+
+        foreach ([
+                     'RepositoryContract',
+                     'CacheRepository',
+                     'Repository',
+                 ] as $suffix) {
+            if (Str::endsWith($baseName, $suffix)) {
+                $baseName = Str::beforeLast($baseName, $suffix);
+                break;
+            }
+        }
+
+        return $baseName;
+    }
+
+    private function paths(string $baseName): array
+    {
+        $repositoryClass = $baseName . 'Repository';
+        $contractClass = $baseName . 'RepositoryContract';
+        $cacheClass = $baseName . 'CacheRepository';
+
         return [
-            'contract' => app_path("Repositories/Contracts/{$repositoryName}.php"),
-            'eloquent' => app_path("Repositories/Implementations/Eloquent/{$repositoryName}.php"),
-            'cached' => app_path("Repositories/Implementations/Cached/{$repositoryName}.php"),
+            'contract' => app_path("Repositories/Contracts/{$contractClass}.php"),
+            'eloquent' => app_path("Repositories/Implementations/Eloquent/{$repositoryClass}.php"),
+            'cached' => app_path("Repositories/Implementations/Cached/{$cacheClass}.php"),
         ];
     }
 
@@ -108,24 +126,21 @@ class MakeRepositoryCommand extends Command
     private function writeFile(string $path, string $content, bool $force): int
     {
         if (File::exists($path) && ! $force) {
-            $this->warn('Skip (exists): '.$this->relative($path));
-
+            $this->warn('Skip (exists): ' . $this->relative($path));
             return 0;
         }
 
         File::put($path, $content);
-
         return 1;
     }
 
     private function relative(string $absolutePath): string
     {
         $app = base_path();
-
         return ltrim(Str::replaceFirst($app, '', $absolutePath), DIRECTORY_SEPARATOR);
     }
 
-    private function buildContract(string $repositoryName, ?string $modelClass): string
+    private function buildContract(string $contractClass, ?string $modelClass): string
     {
         $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
         $methods = $this->contractMethods($modelClass);
@@ -135,20 +150,16 @@ class MakeRepositoryCommand extends Command
 
 namespace App\Repositories\Contracts;
 
-{$modelUse}interface {$repositoryName}
+{$modelUse}interface {$contractClass}
 {
 {$methods}}
 PHP;
     }
 
-    private function buildEloquentImplementation(string $repositoryName, ?string $modelClass): string
+    private function buildEloquentImplementation(string $repositoryClass, string $contractClass, ?string $modelClass): string
     {
-        $contractFqn = "App\\Repositories\\Contracts\\{$repositoryName}";
         $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
-        $implements = "implements {$repositoryName}Contract";
-        $contractAlias = "{$repositoryName} as {$repositoryName}Contract";
-        $imports = "use {$contractFqn} as {$repositoryName}Contract;\n{$modelUse}";
-
+        $imports = "use App\\Repositories\\Contracts\\{$contractClass};\n{$modelUse}";
         $body = $this->eloquentMethods($modelClass);
 
         return <<<PHP
@@ -156,18 +167,16 @@ PHP;
 
 namespace App\Repositories\Implementations\Eloquent;
 
-{$imports}class {$repositoryName} {$implements}
+{$imports}class {$repositoryClass} implements {$contractClass}
 {
 {$body}}
 PHP;
     }
 
-    private function buildCachedImplementation(string $repositoryName, ?string $modelClass): string
+    private function buildCachedImplementation(string $cacheClass, string $contractClass, ?string $modelClass): string
     {
-        $contractFqn = "App\\Repositories\\Contracts\\{$repositoryName}";
         $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
-        $imports = "use {$contractFqn} as {$repositoryName}Contract;\nuse Illuminate\\Support\\Facades\\Cache;\n{$modelUse}";
-
+        $imports = "use App\\Repositories\\Contracts\\{$contractClass};\nuse Illuminate\\Support\\Facades\\Cache;\n{$modelUse}";
         $body = $this->cachedMethods($modelClass);
 
         return <<<PHP
@@ -175,10 +184,10 @@ PHP;
 
 namespace App\Repositories\Implementations\Cached;
 
-{$imports}class {$repositoryName} implements {$repositoryName}Contract
+{$imports}class {$cacheClass} implements {$contractClass}
 {
     public function __construct(
-        private readonly {$repositoryName}Contract \$inner
+        private readonly {$contractClass} \$inner
     ) {}
 
 {$body}}
@@ -253,6 +262,7 @@ PHP;
         }
 
         $model = $modelClass;
+        $keyPrefix = Str::snake($model);
 
         return
             "    public function findOrFail(int \$id): {$model}
@@ -296,28 +306,22 @@ PHP;
 
     private function keyById(int \$id): string
     {
-        return \"".Str::snake($model).':id:{$id}";
+        return \"{$keyPrefix}:id:{\$id}\";
     }
-';
+";
     }
 
-    private function bindingExample(string $repositoryName, bool $withCache): string
+    private function ensureRepositoryServiceProviderExists(): void
     {
-        $contract = "\\App\\Repositories\\Contracts\\{$repositoryName}";
-        $eloquent = "\\App\\Repositories\\Implementations\\Eloquent\\{$repositoryName}";
-        $cached = "\\App\\Repositories\\Implementations\\Cached\\{$repositoryName}";
+        $providerPath = app_path('Providers/RepositoryServiceProvider.php');
 
-        if (! $withCache) {
-            return "        \$this->app->bind(\{$repositoryName}::class, {$repositoryName}::class);\n"
-                ."        // {$contract} => {$eloquent}\n";
+        if (! File::exists($providerPath)) {
+            File::ensureDirectoryExists(app_path('Providers'));
+            File::put($providerPath, $this->repositoryServiceProviderStub());
+            $this->info('Created RepositoryServiceProvider');
         }
 
-        return
-            "        \$this->app->bind(\{$contract}::class, function (\$app) {
-            return new {$cached}(
-                \$app->make(\{$eloquent}::class)
-            );
-        });";
+        $this->ensureProviderRegistered();
     }
 
     private function ensureProviderRegistered(): void
@@ -330,7 +334,7 @@ PHP;
 
         $content = File::get($providersFile);
 
-        if (str_contains($content, 'RepositoryServiceProvider::class')) {
+        if (str_contains($content, 'App\\Providers\\RepositoryServiceProvider::class')) {
             return;
         }
 
@@ -343,67 +347,6 @@ PHP;
         File::put($providersFile, $content);
 
         $this->info('Registered RepositoryServiceProvider in bootstrap/providers.php');
-    }
-
-    private function appendBindingToRepositoryServiceProvider(
-        string $repositoryName,
-        bool $withCache
-    ): void {
-        $providerPath = app_path('Providers/RepositoryServiceProvider.php');
-
-        if (! File::exists($providerPath)) {
-            return;
-        }
-
-        $content = File::get($providerPath);
-
-        $contract = "\\App\\Repositories\\Contracts\\{$repositoryName}";
-        $eloquent = "\\App\\Repositories\\Implementations\\Eloquent\\{$repositoryName}";
-        $cached = "\\App\\Repositories\\Implementations\\Cached\\{$repositoryName}";
-
-        if (str_contains($content, $contract)) {
-            return;
-        }
-
-        $binding = $withCache
-            ? <<<PHP
-
-        \$this->app->bind({$contract}::class, function (\$app) {
-            return new {$cached}(
-                \$app->make({$eloquent}::class)
-            );
-        });
-PHP
-            : <<<PHP
-
-        \$this->app->bind({$contract}::class, {$eloquent}::class);
-PHP;
-
-        $content = preg_replace(
-            '/public function register\(\): void\s*\{\s*/',
-            "public function register(): void\n    {\n{$binding}",
-            $content,
-            1
-        );
-
-        File::put($providerPath, $content);
-
-        $this->info("Added binding to RepositoryServiceProvider ({$repositoryName})");
-    }
-
-    private function ensureRepositoryServiceProviderExists(): void
-    {
-        $providerPath = app_path('Providers/RepositoryServiceProvider.php');
-
-        if (! File::exists($providerPath)) {
-            File::ensureDirectoryExists(app_path('Providers'));
-
-            File::put($providerPath, $this->repositoryServiceProviderStub());
-
-            $this->info('Created RepositoryServiceProvider');
-        }
-
-        $this->ensureProviderRegistered();
     }
 
     private function repositoryServiceProviderStub(): string
@@ -419,9 +362,133 @@ class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-
+        //
     }
 }
 PHP;
+    }
+
+    private function appendBindingToRepositoryServiceProvider(string $baseName, bool $withCache): void
+    {
+        $providerPath = app_path('Providers/RepositoryServiceProvider.php');
+
+        if (! File::exists($providerPath)) {
+            return;
+        }
+
+        $content = File::get($providerPath);
+
+        $contractClass = $baseName . 'RepositoryContract';
+        $repositoryClass = $baseName . 'Repository';
+        $cacheClass = $baseName . 'CacheRepository';
+
+        $contractFqn = "App\\Repositories\\Contracts\\{$contractClass}";
+        $eloquentFqn = "App\\Repositories\\Implementations\\Eloquent\\{$repositoryClass}";
+        $cachedFqn = "App\\Repositories\\Implementations\\Cached\\{$cacheClass}";
+
+        if (str_contains($content, $contractFqn) || str_contains($content, "{$contractClass}::class")) {
+            return;
+        }
+
+        $uses = [
+            "use {$contractFqn};",
+            "use {$eloquentFqn};",
+        ];
+
+        if ($withCache) {
+            $uses[] = "use {$cachedFqn};";
+        }
+
+        $content = $this->ensureUses($content, $uses);
+
+        $binding = $withCache
+            ? <<<PHP
+        \$this->app->bind({$contractClass}::class, function (\$app) {
+            return new {$cacheClass}(
+                \$app->make({$repositoryClass}::class)
+            );
+        });
+
+PHP
+            : <<<PHP
+        \$this->app->bind({$contractClass}::class, {$repositoryClass}::class);
+
+PHP;
+
+        $content = $this->insertIntoRegisterMethod($content, $binding);
+
+        File::put($providerPath, $content);
+
+        $this->info("Added binding to RepositoryServiceProvider ({$baseName})");
+    }
+
+    private function ensureUses(string $content, array $useLines): string
+    {
+        $content = str_replace(["\r\n", "\r"], "\n", $content);
+
+        foreach ($useLines as $line) {
+            if (! str_contains($content, $line)) {
+                $content = $this->addUseLine($content, $line);
+            }
+        }
+
+        return $content;
+    }
+
+    private function addUseLine(string $content, string $useLine): string
+    {
+        $lines = explode("\n", $content);
+
+        $lastUseIndex = null;
+        $namespaceIndex = null;
+
+        foreach ($lines as $i => $line) {
+            $trim = trim($line);
+
+            if ($namespaceIndex === null && preg_match('/^namespace\s+[^;]+;$/', $trim)) {
+                $namespaceIndex = $i;
+            }
+
+            if (preg_match('/^use\s+[^;]+;$/', $trim)) {
+                $lastUseIndex = $i;
+            }
+        }
+
+        if ($lastUseIndex !== null) {
+            array_splice($lines, $lastUseIndex + 1, 0, [$useLine]);
+            return implode("\n", $lines);
+        }
+
+        if ($namespaceIndex !== null) {
+            $insertAt = $namespaceIndex + 1;
+
+            while (isset($lines[$insertAt]) && trim($lines[$insertAt]) === '') {
+                $insertAt++;
+            }
+
+            array_splice($lines, $insertAt, 0, ['', $useLine]);
+            return implode("\n", $lines);
+        }
+
+        return $useLine . "\n" . $content;
+    }
+
+    private function insertIntoRegisterMethod(string $content, string $bindingBlock): string
+    {
+        if (preg_match('/public function register\(\): void\s*\{\s*\n\s*\/\/\s*\n/s', $content)) {
+            return preg_replace(
+                '/public function register\(\): void\s*\{\s*\n\s*\/\/\s*\n/s',
+                "public function register(): void\n    {\n{$bindingBlock}",
+                $content,
+                1
+            );
+        }
+
+        return preg_replace(
+            '/(public function register\(\): void\s*\{\s*\n)/s',
+            '$1' . $bindingBlock,
+            $content,
+            1
+        );
     }
 }
