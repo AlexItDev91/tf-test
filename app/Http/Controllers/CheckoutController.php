@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\CartEmptyException;
 use App\Http\Requests\CheckoutRequest;
 use App\Services\CheckoutService;
 use Illuminate\Http\JsonResponse;
+use RuntimeException;
 use Throwable;
 
 class CheckoutController extends Controller
@@ -26,7 +28,7 @@ class CheckoutController extends Controller
                 'status' => $sale->status->value,
                 'total_cents' => (int) $sale->total_cents,
             ]);
-        } catch (\RuntimeException $e) {
+        } catch (CartEmptyException|RuntimeException $e) {
             return response()->json([
                 'message' => $e->getMessage(),
             ], 400);

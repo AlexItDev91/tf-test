@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\SaleItemDataDto;
 use App\Enums\SaleStatus;
+use App\Exceptions\CartEmptyException;
 use App\Models\CartItem;
 use App\Models\Sale;
 use App\Repositories\Contracts\CartRepositoryContract;
@@ -35,7 +36,7 @@ class CheckoutService
             $items = $this->cartRepository->getItemsWithProducts($cart->id);
 
             if ($items->isEmpty()) {
-                throw new RuntimeException('Cart is empty');
+                throw new CartEmptyException('Cart is empty');
             }
 
             $sale = $this->saleRepository->createPending($userId);
