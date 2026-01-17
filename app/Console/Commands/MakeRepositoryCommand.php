@@ -21,9 +21,9 @@ class MakeRepositoryCommand extends Command
         $inputName = Str::studly($this->argument('name'));
         $baseName = $this->normalizeBaseName($inputName);
 
-        $repositoryClass = $baseName . 'Repository';
-        $contractClass = $baseName . 'RepositoryContract';
-        $cacheClass = $baseName . 'CacheRepository';
+        $repositoryClass = $baseName.'Repository';
+        $contractClass = $baseName.'RepositoryContract';
+        $cacheClass = $baseName.'CacheRepository';
 
         $model = $this->option('model');
         $modelClass = $model ? Str::studly($model) : null;
@@ -61,10 +61,10 @@ class MakeRepositoryCommand extends Command
             $this->info('Nothing to do (all files already exist). Use --force to overwrite.');
         } else {
             $this->info('Repository generated:');
-            $this->line(' - ' . $this->relative($paths['contract']));
-            $this->line(' - ' . $this->relative($paths['eloquent']));
+            $this->line(' - '.$this->relative($paths['contract']));
+            $this->line(' - '.$this->relative($paths['eloquent']));
             if ($withCache) {
-                $this->line(' - ' . $this->relative($paths['cached']));
+                $this->line(' - '.$this->relative($paths['cached']));
             }
         }
 
@@ -79,10 +79,10 @@ class MakeRepositoryCommand extends Command
         $baseName = $inputName;
 
         foreach ([
-                     'RepositoryContract',
-                     'CacheRepository',
-                     'Repository',
-                 ] as $suffix) {
+            'RepositoryContract',
+            'CacheRepository',
+            'Repository',
+        ] as $suffix) {
             if (Str::endsWith($baseName, $suffix)) {
                 $baseName = Str::beforeLast($baseName, $suffix);
                 break;
@@ -94,9 +94,9 @@ class MakeRepositoryCommand extends Command
 
     private function paths(string $baseName): array
     {
-        $repositoryClass = $baseName . 'Repository';
-        $contractClass = $baseName . 'RepositoryContract';
-        $cacheClass = $baseName . 'CacheRepository';
+        $repositoryClass = $baseName.'Repository';
+        $contractClass = $baseName.'RepositoryContract';
+        $cacheClass = $baseName.'CacheRepository';
 
         return [
             'contract' => app_path("Repositories/Contracts/{$contractClass}.php"),
@@ -126,17 +126,20 @@ class MakeRepositoryCommand extends Command
     private function writeFile(string $path, string $content, bool $force): int
     {
         if (File::exists($path) && ! $force) {
-            $this->warn('Skip (exists): ' . $this->relative($path));
+            $this->warn('Skip (exists): '.$this->relative($path));
+
             return 0;
         }
 
         File::put($path, $content);
+
         return 1;
     }
 
     private function relative(string $absolutePath): string
     {
         $app = base_path();
+
         return ltrim(Str::replaceFirst($app, '', $absolutePath), DIRECTORY_SEPARATOR);
     }
 
@@ -378,9 +381,9 @@ PHP;
 
         $content = File::get($providerPath);
 
-        $contractClass = $baseName . 'RepositoryContract';
-        $repositoryClass = $baseName . 'Repository';
-        $cacheClass = $baseName . 'CacheRepository';
+        $contractClass = $baseName.'RepositoryContract';
+        $repositoryClass = $baseName.'Repository';
+        $cacheClass = $baseName.'CacheRepository';
 
         $contractFqn = "App\\Repositories\\Contracts\\{$contractClass}";
         $eloquentFqn = "App\\Repositories\\Implementations\\Eloquent\\{$repositoryClass}";
@@ -456,6 +459,7 @@ PHP;
 
         if ($lastUseIndex !== null) {
             array_splice($lines, $lastUseIndex + 1, 0, [$useLine]);
+
             return implode("\n", $lines);
         }
 
@@ -467,10 +471,11 @@ PHP;
             }
 
             array_splice($lines, $insertAt, 0, ['', $useLine]);
+
             return implode("\n", $lines);
         }
 
-        return $useLine . "\n" . $content;
+        return $useLine."\n".$content;
     }
 
     private function insertIntoRegisterMethod(string $content, string $bindingBlock): string
@@ -486,7 +491,7 @@ PHP;
 
         return preg_replace(
             '/(public function register\(\): void\s*\{\s*\n)/s',
-            '$1' . $bindingBlock,
+            '$1'.$bindingBlock,
             $content,
             1
         );

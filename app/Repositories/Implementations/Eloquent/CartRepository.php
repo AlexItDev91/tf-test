@@ -59,7 +59,7 @@ class CartRepository implements CartRepositoryContract
                 ->lockForUpdate()
                 ->first();
 
-            if (!$item) {
+            if (! $item) {
                 return CartItem::query()->create([
                     'cart_id' => $cartId,
                     'product_id' => $productId,
@@ -95,6 +95,6 @@ class CartRepository implements CartRepositoryContract
             ->selectRaw('COALESCE(SUM(products.price * cart_items.quantity), 0) AS total')
             ->value('total');
 
-        return number_format((float)($total ?? 0), 2, '.', '');
+        return number_format((float) ($total ?? 0), 2, '.', '');
     }
 }

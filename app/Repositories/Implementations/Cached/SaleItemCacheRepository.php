@@ -25,7 +25,7 @@ class SaleItemCacheRepository implements SaleItemRepositoryContract
     public function create(array $data): SaleItem
     {
         $item = $this->inner->create($data);
-        Cache::forget($this->keyItems((int)$data['sale_id']));
+        Cache::forget($this->keyItems((int) $data['sale_id']));
 
         return $item;
     }
