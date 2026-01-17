@@ -85,7 +85,7 @@
         "pint": "vendor/bin/pint"
     },
     "extra": {
-        "laravel": {
+        "Laravel": {
             "dont-discover": []
         }
     },
