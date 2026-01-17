@@ -12,11 +12,19 @@ use Illuminate\Support\ServiceProvider;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use App\Repositories\Implementations\Eloquent\SaleRepository;
 use App\Repositories\Implementations\Cached\SaleCacheRepository;
+use App\Repositories\Contracts\UserActionLogRepositoryContract;
+use App\Repositories\Implementations\Eloquent\UserActionLogRepository;
+use App\Repositories\Implementations\Cached\UserActionLogCacheRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(UserActionLogRepositoryContract::class, function ($app) {
+            return new UserActionLogCacheRepository(
+                $app->make(UserActionLogRepository::class)
+            );
+        });
         $this->app->bind(SaleRepositoryContract::class, function ($app) {
             return new SaleCacheRepository(
                 $app->make(SaleRepository::class)
