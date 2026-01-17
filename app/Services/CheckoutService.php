@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\DTOs\SaleItemDataDto;
 use App\Models\CartItem;
-use App\Models\Product;
 use App\Models\Sale;
 use App\Repositories\Contracts\CartRepositoryContract;
 use App\Repositories\Contracts\ProductRepositoryContract;
@@ -64,13 +64,13 @@ class CheckoutService
 
                 $totalCents += $lineCents;
 
-                $saleItems[] = [
-                    'product_id' => (int) $product->id,
-                    'product_name' => (string) $product->name,
-                    'unit_price_cents' => $unitCents,
-                    'quantity' => $qty,
-                    'line_total_cents' => $lineCents,
-                ];
+                $saleItems[] = new SaleItemDataDto(
+                    productId: (int) $product->id,
+                    productName: (string) $product->name,
+                    unitPriceCents: $unitCents,
+                    quantity: $qty,
+                    lineTotalCents: $lineCents
+                );
             }
 
             $this->saleItemRepository->bulkCreate($sale->id, $saleItems);

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Implementations\Cached;
 
+use App\DTOs\SaleItemDataDto;
 use App\Models\SaleItem;
 use App\Repositories\Contracts\SaleItemRepositoryContract;
 use Illuminate\Support\Collection;
@@ -33,6 +34,9 @@ class SaleItemCacheRepository implements SaleItemRepositoryContract
         return $item;
     }
 
+    /**
+     * @param  SaleItemDataDto[]  $items
+     */
     public function bulkCreate(int $saleId, array $items): void
     {
         $this->inner->bulkCreate($saleId, $items);

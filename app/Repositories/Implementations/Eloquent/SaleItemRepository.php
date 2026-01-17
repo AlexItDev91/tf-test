@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Implementations\Eloquent;
 
+use App\DTOs\SaleItemDataDto;
 use App\Models\SaleItem;
 use App\Repositories\Contracts\SaleItemRepositoryContract;
 use Illuminate\Support\Collection;
@@ -21,6 +22,9 @@ class SaleItemRepository implements SaleItemRepositoryContract
         return SaleItem::query()->create($data);
     }
 
+    /**
+     * @param  SaleItemDataDto[]  $items
+     */
     public function bulkCreate(int $saleId, array $items): void
     {
         $now = now();
@@ -30,11 +34,11 @@ class SaleItemRepository implements SaleItemRepositoryContract
         foreach ($items as $item) {
             $rows[] = [
                 'sale_id' => $saleId,
-                'product_id' => (int) $item['product_id'],
-                'product_name' => (string) $item['product_name'],
-                'unit_price_cents' => (int) $item['unit_price_cents'],
-                'quantity' => (int) $item['quantity'],
-                'line_total_cents' => (int) $item['line_total_cents'],
+                'product_id' => $item->getProductId(),
+                'product_name' => $item->getProductName(),
+                'unit_price_cents' => $item->getUnitPriceCents(),
+                'quantity' => $item->getQuantity(),
+                'line_total_cents' => $item->getLineTotalCents(),
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

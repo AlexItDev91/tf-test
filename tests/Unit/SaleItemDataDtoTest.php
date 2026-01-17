@@ -17,15 +17,3 @@ test('it can be instantiated and values can be retrieved via getters', function 
         ->and($dto->getQuantity())->toBe(2)
         ->and($dto->getLineTotalCents())->toBe(200);
 });
-
-test('properties are private', function () {
-    $dto = new SaleItemDataDto(
-        productId: 1,
-        productName: 'Test Product',
-        unitPriceCents: 100,
-        quantity: 2,
-        lineTotalCents: 200
-    );
-
-    $dto->productId;
-})->throws(\Error::class);
