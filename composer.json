@@ -4,8 +4,11 @@
     "type": "project",
     "description": "The official Laravel starter kit for Livewire.",
     "keywords": [
-        "laravel",
-        "framework"
+        "Laravel",
+        "Test",
+        "Livewire",
+        "Starter",
+        "Kit"
     ],
     "license": "MIT",
     "require": {
