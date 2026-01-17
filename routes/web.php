@@ -12,10 +12,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', ProductsPage::class)->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
-});
-
 Route::middleware('auth')->group(function () {
     Route::view('profile', 'profile')->name('profile');
 

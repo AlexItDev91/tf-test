@@ -18,7 +18,7 @@ it('completes the full flow: register, auth, cart, buy, low stock notification, 
         ->set('password_confirmation', 'password');
 
     $registrationComponent->call('register');
-    $registrationComponent->assertRedirect(route('dashboard', absolute: false));
+    $registrationComponent->assertRedirect(route('home', absolute: false));
 
     $this->assertAuthenticated();
     $user = User::where('email', 'test@example.com')->first();

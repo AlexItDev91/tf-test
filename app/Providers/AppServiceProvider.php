@@ -23,7 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->configureDefaults();
+        \Illuminate\Support\Facades\View::addNamespace('pages', resource_path('views/pages'));
+        \Illuminate\Support\Facades\Blade::component('layouts.auth.simple', 'layouts.auth');
     }
 
     protected function configureDefaults(): void
