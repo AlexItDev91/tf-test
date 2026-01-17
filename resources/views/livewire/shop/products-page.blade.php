@@ -6,11 +6,7 @@
     @endif
 
     <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Products</h1>
-
-        <a href="{{ route('shop.cart') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-            Cart
-        </a>
+        <h1 class="text-xl font-semibold text-white">Products</h1>
     </div>
 
     <div class="space-y-2">

@@ -10,7 +10,7 @@ use App\Livewire\Shop\SaleShowPage;
 use App\Livewire\Shop\SalesPage;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome');
+Route::get('/', ProductsPage::class)->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
@@ -20,7 +20,6 @@ Route::middleware('auth')->group(function () {
     Route::view('profile', 'profile')->name('profile');
 
     Route::prefix('shop')->name('shop.')->group(function () {
-        Route::get('products', ProductsPage::class)->name('products');
         Route::get('cart', CartPage::class)->name('cart');
         Route::get('sales', SalesPage::class)->name('sales');
         Route::get('sales/{sale}', SaleShowPage::class)->name('sales.show');

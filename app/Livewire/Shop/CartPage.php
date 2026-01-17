@@ -7,9 +7,12 @@ use App\Services\CheckoutService;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Throwable;
+
+#[Layout('livewire.layout.land')]
 
 class CartPage extends Component
 {

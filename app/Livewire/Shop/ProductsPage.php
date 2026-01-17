@@ -6,11 +6,14 @@ use App\Repositories\Contracts\ProductRepositoryContract;
 use App\Services\CartService;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('livewire.layout.land')]
 class ProductsPage extends Component
 {
     private ProductRepositoryContract $productRepository;
+
     private CartService $cartService;
 
     public function mount(

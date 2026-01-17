@@ -1,20 +1,6 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Sale #{{ (int) $sale->id }}</h1>
-
-        <div class="flex items-center gap-2">
-            <a href="{{ route('shop.sales') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-                Back
-            </a>
-
-            <a href="{{ route('shop.products') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-                Products
-            </a>
-
-            <a href="{{ route('shop.cart') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-                Cart
-            </a>
-        </div>
+        <h1 class="text-xl font-semibold text-white">Sale #{{ (int) $sale->id }}</h1>
     </div>
 
     <div class="rounded-lg border p-4 space-y-2">

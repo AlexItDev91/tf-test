@@ -6,8 +6,10 @@ use App\Models\Sale;
 use App\Services\SaleService;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('livewire.layout.land')]
 class SaleShowPage extends Component
 {
     public Sale $sale;

@@ -6,17 +6,7 @@
     @endif
 
     <div class="flex items-center justify-between">
-        <h1 class="text-xl font-semibold">Cart</h1>
-
-        <div class="flex items-center gap-2">
-            <a href="{{ route('shop.products') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-                Products
-            </a>
-
-            <a href="{{ route('shop.sales') }}" class="rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
-                Sales
-            </a>
-        </div>
+        <h1 class="text-xl font-semibold text-white">Cart</h1>
     </div>
 
     @if($items->isEmpty())
