@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Enums\SaleStatus;
 use App\Models\Sale;
 
 interface SaleRepositoryContract
@@ -10,7 +11,7 @@ interface SaleRepositoryContract
 
     public function updateTotalCents(int $saleId, int $totalCents): void;
 
-    public function setStatus(int $saleId, string $status): void;
+    public function setStatus(int $saleId, SaleStatus $status): void;
 
     public function getWithItems(int $saleId): ?Sale;
 }

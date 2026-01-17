@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Implementations\Cached;
 
+use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use Illuminate\Support\Facades\Cache;
@@ -24,7 +25,7 @@ class SaleCacheRepository implements SaleRepositoryContract
         Cache::forget($this->cacheKey($saleId));
     }
 
-    public function setStatus(int $saleId, string $status): void
+    public function setStatus(int $saleId, SaleStatus $status): void
     {
         $this->inner->setStatus($saleId, $status);
 

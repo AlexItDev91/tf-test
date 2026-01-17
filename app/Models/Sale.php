@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SaleStatus;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -11,11 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property int $id
  * @property int $user_id
- * @property string $status
+ * @property SaleStatus $status
  * @property string $total_cents
  * @property Carbon $created_at
  * @property Carbon $updated_at
- *
  * @property-read Collection<int, SaleItem> $items
  */
 class Sale extends Model
@@ -26,9 +26,13 @@ class Sale extends Model
         'total_cents',
     ];
 
-    protected $casts = [
-        'total_cents' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'total_cents' => 'integer',
+            'status' => SaleStatus::class,
+        ];
+    }
 
     public function user(): BelongsTo
     {

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\DTOs\SaleItemDataDto;
+use App\Enums\SaleStatus;
 use App\Models\CartItem;
 use App\Models\Sale;
 use App\Repositories\Contracts\CartRepositoryContract;
@@ -76,7 +77,7 @@ class CheckoutService
             $this->saleItemRepository->bulkCreate($sale->id, $saleItems);
 
             $this->saleRepository->updateTotalCents($sale->id, $totalCents);
-            $this->saleRepository->setStatus($sale->id, 'paid');
+            $this->saleRepository->setStatus($sale->id, SaleStatus::PAID);
 
             $this->cartRepository->clear($cart->id);
 

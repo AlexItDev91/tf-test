@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SaleStatus;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -37,7 +38,7 @@ it('checks out: creates sale + sale items, decrements stock, clears cart', funct
             'total_cents',
         ])
         ->assertJson([
-            'status' => 'paid',
+            'status' => SaleStatus::PAID->value,
             'total_cents' => 1299 * 3,
         ]);
 
@@ -46,7 +47,7 @@ it('checks out: creates sale + sale items, decrements stock, clears cart', funct
     $sale = Sale::query()->findOrFail($saleId);
 
     expect((int) $sale->user_id)->toBe((int) $user->id)
-        ->and((string) $sale->status)->toBe('paid')
+        ->and($sale->status)->toBe(SaleStatus::PAID)
         ->and((int) $sale->total_cents)->toBe(1299 * 3);
 
     $items = SaleItem::query()->where('sale_id', $saleId)->get();
@@ -126,14 +127,14 @@ it('checks out multiple products correctly', function () {
 
     $response->assertOk()
         ->assertJson([
-            'status' => 'paid',
+            'status' => SaleStatus::PAID->value,
             'total_cents' => (100 * 2) + (200 * 3),
         ]);
 
     $this->assertDatabaseHas('sales', [
         'user_id' => $user->id,
         'total_cents' => 800,
-        'status' => 'paid',
+        'status' => SaleStatus::PAID->value,
     ]);
 
     $this->assertDatabaseHas('sale_items', ['product_id' => $p1->id, 'quantity' => 2]);

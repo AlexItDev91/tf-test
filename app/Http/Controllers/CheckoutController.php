@@ -23,7 +23,7 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'sale_id' => (int) $sale->id,
-                'status' => (string) $sale->status,
+                'status' => $sale->status->value,
                 'total_cents' => (int) $sale->total_cents,
             ]);
         } catch (\RuntimeException $e) {
