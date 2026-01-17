@@ -40,7 +40,7 @@ class UserCacheRepository implements UserRepositoryContract
     {
         $user = $this->inner->create($data);
 
-        Cache::forget($this->keyById((int)$user->getKey()));
+        Cache::forget($this->keyById((int) $user->getKey()));
         Cache::forget($this->keyByEmail($user->email));
 
         return $user;

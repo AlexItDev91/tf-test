@@ -8,22 +8,22 @@ use App\Repositories\Contracts\ProductRepositoryContract;
 use App\Repositories\Contracts\SaleItemRepositoryContract;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use App\Repositories\Contracts\UserActionLogRepositoryContract;
+use App\Repositories\Contracts\UserRepositoryContract;
 use App\Repositories\Implementations\Cached\CartCacheRepository;
 use App\Repositories\Implementations\Cached\CartItemCacheRepository;
 use App\Repositories\Implementations\Cached\ProductCacheRepository;
 use App\Repositories\Implementations\Cached\SaleCacheRepository;
 use App\Repositories\Implementations\Cached\SaleItemCacheRepository;
 use App\Repositories\Implementations\Cached\UserActionLogCacheRepository;
+use App\Repositories\Implementations\Cached\UserCacheRepository;
 use App\Repositories\Implementations\Eloquent\CartItemRepository;
 use App\Repositories\Implementations\Eloquent\CartRepository;
 use App\Repositories\Implementations\Eloquent\ProductRepository;
 use App\Repositories\Implementations\Eloquent\SaleItemRepository;
 use App\Repositories\Implementations\Eloquent\SaleRepository;
 use App\Repositories\Implementations\Eloquent\UserActionLogRepository;
-use Illuminate\Support\ServiceProvider;
-use App\Repositories\Contracts\UserRepositoryContract;
 use App\Repositories\Implementations\Eloquent\UserRepository;
-use App\Repositories\Implementations\Cached\UserCacheRepository;
+use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
