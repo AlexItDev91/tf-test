@@ -1,3 +1,36 @@
 {
-    "preset": "laravel"
+    "preset": "laravel",
+    "exclude": [
+        "database/migrations"
+    ],
+    "rules": {
+        "single_import_per_statement": true,
+        "phpdoc_to_comment": false,
+        "no_superfluous_phpdoc_tags": {
+            "allow_mixed": false,
+            "allow_unused_params": false,
+            "remove_inheritdoc": true
+        },
+        "no_unused_imports": true,
+        "ordered_imports": true,
+        "phpdoc_trim": true,
+        "phpdoc_trim_consecutive_blank_line_separation": true,
+        "combine_consecutive_issets": true,
+        "combine_consecutive_unsets": true,
+        "new_with_parentheses": {
+            "anonymous_class": true,
+            "named_class": true
+        },
+        "no_whitespace_in_blank_line": true,
+        "standardize_not_equals": true,
+        "array_syntax": {
+            "syntax": "short"
+        },
+        "no_empty_phpdoc": true,
+        "no_empty_statement": true,
+        "no_leading_import_slash": true,
+        "no_trailing_comma_in_singleline_array": true,
+        "single_blank_line_at_eof": true,
+        "no_trailing_whitespace": true
+    }
 }
