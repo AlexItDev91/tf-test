@@ -13,3 +13,7 @@ Artisan::command('make:repository {name}', function () {
         'name' => $this->argument('name'),
     ]);
 })->purpose('Create a new repository class');
+
+Schedule::command('report:daily-sales')
+    ->dailyAt('21:00')
+    ->timezone('Europe/Warsaw');

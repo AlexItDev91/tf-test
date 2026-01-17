@@ -7,6 +7,7 @@ use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
+use JetBrains\PhpStorm\ArrayShape;
 
 class SaleCacheRepository implements SaleRepositoryContract
 {
@@ -64,5 +65,16 @@ class SaleCacheRepository implements SaleRepositoryContract
     private function cacheKeyById(int $saleId): string
     {
         return "sale:id:{$saleId}";
+    }
+
+    #[ArrayShape([
+        'ordersCount' => 'int',
+        'itemsCount' => 'int',
+        'totalCents' => 'int',
+        'lines' => 'array',
+    ])]
+    public function dailyReport(string $dateYmd): array
+    {
+        return $this->inner->dailyReport($dateYmd);
     }
 }
