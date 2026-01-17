@@ -26,7 +26,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'action']);
-            $table->index(['created_at']);
+            $table->index(['user_id', 'created_at']);
+            $table->index(['action', 'created_at']);
         });
     }
 
