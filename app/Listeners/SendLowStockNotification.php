@@ -20,7 +20,6 @@ class SendLowStockNotification implements ShouldQueue
             return;
         }
 
-
         if ((int) $event->previousStock <= $threshold) {
             return;
         }

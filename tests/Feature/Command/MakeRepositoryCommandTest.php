@@ -3,6 +3,7 @@
 namespace Tests\Feature\Command;
 
 use Illuminate\Support\Facades\File;
+
 use function Pest\Laravel\artisan;
 
 beforeEach(function () {

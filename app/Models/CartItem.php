@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $quantity
  * @property Carbon $created_at
  * @property Carbon $updated_at
- *
  * @property Cart $cart
  * @property Product|null $product
  */

@@ -11,8 +11,8 @@ beforeEach(function () {
 
 afterEach(function () {
     // Clean up created files
-    if (File::exists($this->servicesPath . '/TestService.php')) {
-        File::delete($this->servicesPath . '/TestService.php');
+    if (File::exists($this->servicesPath.'/TestService.php')) {
+        File::delete($this->servicesPath.'/TestService.php');
     }
 
     $repoBase = 'Test';
@@ -42,7 +42,7 @@ it('creates a service class', function () {
         ->assertSuccessful();
 
     expect(File::exists($expectedPath))->toBeTrue();
-    expect(File::get($expectedPath))->toContain("class TestService");
+    expect(File::get($expectedPath))->toContain('class TestService');
 });
 
 it('creates a repository with contract and implementations', function () {
@@ -50,7 +50,7 @@ it('creates a repository with contract and implementations', function () {
 
     $this->artisan('make:app-repository', [
         'name' => $name,
-        '--no-interaction' => true
+        '--no-interaction' => true,
     ])->assertSuccessful();
 
     expect(File::exists(app_path("Repositories/Contracts/{$name}RepositoryContract.php")))->toBeTrue();

@@ -70,7 +70,7 @@ test('it can generate daily report', function () {
         'sale_id' => $sale->id,
         'product_name' => 'Product A',
         'quantity' => 2,
-        'line_total_cents' => 2000
+        'line_total_cents' => 2000,
     ]);
 
     $report = $this->repository->dailyReport($date);

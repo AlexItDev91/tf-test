@@ -26,6 +26,7 @@ class MakeServiceCommand extends Command
 
         if (File::exists($path) && ! $this->option('force')) {
             $this->warn("Skip (exists): app/Services/{$inputName}.php");
+
             return self::SUCCESS;
         }
 

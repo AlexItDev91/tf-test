@@ -4,7 +4,6 @@ use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryContract;
 use App\Repositories\Implementations\Cached\UserCacheRepository;
 use Illuminate\Support\Facades\Cache;
-use Mockery\MockInterface;
 
 beforeEach(function () {
     $this->inner = Mockery::mock(UserRepositoryContract::class);
