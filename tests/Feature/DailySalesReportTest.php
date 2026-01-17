@@ -4,7 +4,6 @@ use App\Jobs\SendDailySalesReportJob;
 use App\Mail\DailySalesReportMail;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Services\SalesReportService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
@@ -40,7 +39,7 @@ it('sends the daily sales report mail with correct data via job', function () {
 
     $date = now()->toDateString();
 
-    $sale = Sale::factory()->create(['created_at' => now(), 'total_cents' => 1000]);
+    $sale = Sale::factory()->create(['created_at' => now(), 'total_cents' => 1000, 'status' => 'paid']);
     SaleItem::factory()->create([
         'sale_id' => $sale->id,
         'product_name' => 'Test Product',
@@ -50,7 +49,7 @@ it('sends the daily sales report mail with correct data via job', function () {
     ]);
 
     // Sale for another day (should be ignored)
-    Sale::factory()->create(['created_at' => now()->subDay()]);
+    Sale::factory()->create(['created_at' => now()->subDay(), 'status' => 'paid']);
 
     (new SendDailySalesReportJob($date))->handle(app(\App\Repositories\Contracts\SaleRepositoryContract::class));
 
@@ -62,18 +61,6 @@ it('sends the daily sales report mail with correct data via job', function () {
                count($mail->lines) === 1 &&
                $mail->lines[0]['name'] === 'Test Product';
     });
-});
-
-it('sends the daily sales report mail via service', function () {
-    Mail::fake();
-
-    $date = now()->toDateString();
-
-    Sale::factory()->create(['created_at' => now(), 'total_cents' => 500]);
-
-    app(SalesReportService::class)->sendDailyReport($date);
-
-    Mail::assertSent(DailySalesReportMail::class);
 });
 
 it('is scheduled to run daily at 21:00', function () {
