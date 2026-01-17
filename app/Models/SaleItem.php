@@ -2,9 +2,23 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $sale_id
+ * @property int $product_id
+ * @property string $product_name
+ * @property string $unit_price
+ * @property int $quantity
+ * @property string $line_total
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property-read Sale $sale
+ */
 class SaleItem extends Model
 {
     protected $fillable = [

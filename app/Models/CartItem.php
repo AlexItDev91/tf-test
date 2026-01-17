@@ -2,9 +2,21 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $cart_id
+ * @property int $product_id
+ * @property int $quantity
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property-read Cart $cart
+ * @property-read Product|null $product
+ */
 class CartItem extends Model
 {
     protected $fillable = [
