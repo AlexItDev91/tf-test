@@ -14,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
- * @property-read Cart $cart
- * @property-read Product|null $product
+ * @property Cart $cart
+ * @property Product|null $product
  */
 class CartItem extends Model
 {

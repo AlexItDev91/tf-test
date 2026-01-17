@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
- * @property-read Sale $sale
+ * @property Sale $sale
  */
 class SaleItem extends Model
 {

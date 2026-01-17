@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $total_cents
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read Collection<int, SaleItem> $items
+ * @property Collection<int, SaleItem> $items
  */
 class Sale extends Model
 {

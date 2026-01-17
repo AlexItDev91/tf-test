@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  *
- * @property-read Collection<int, CartItem> $items
+ * @property Collection<int, CartItem> $items
  */
 class Cart extends Model
 {
