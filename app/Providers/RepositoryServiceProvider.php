@@ -18,11 +18,19 @@ use App\Repositories\Implementations\Cached\UserActionLogCacheRepository;
 use App\Repositories\Contracts\CartItemRepositoryContract;
 use App\Repositories\Implementations\Eloquent\CartItemRepository;
 use App\Repositories\Implementations\Cached\CartItemCacheRepository;
+use App\Repositories\Contracts\SaleItemRepositoryContract;
+use App\Repositories\Implementations\Eloquent\SaleItemRepository;
+use App\Repositories\Implementations\Cached\SaleItemCacheRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->bind(SaleItemRepositoryContract::class, function ($app) {
+            return new SaleItemCacheRepository(
+                $app->make(SaleItemRepository::class)
+            );
+        });
         $this->app->bind(CartItemRepositoryContract::class, function ($app) {
             return new CartItemCacheRepository(
                 $app->make(CartItemRepository::class)
