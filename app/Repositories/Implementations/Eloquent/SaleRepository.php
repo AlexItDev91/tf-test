@@ -31,11 +31,6 @@ class SaleRepository implements SaleRepositoryContract
         }
     }
 
-    public function updateTotal(int $saleId, string $total): void
-    {
-        Sale::query()->whereKey($saleId)->update(['total' => $total]);
-    }
-
     public function setStatus(int $saleId, string $status): void
     {
         Sale::query()->whereKey($saleId)->update(['status' => $status]);

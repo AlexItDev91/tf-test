@@ -10,8 +10,6 @@ interface SaleRepositoryContract
 
     public function addItems(int $saleId, array $items): void;
 
-    public function updateTotal(int $saleId, string $total): void;
-
     public function setStatus(int $saleId, string $status): void;
 
     public function getWithItems(int $saleId): ?Sale;
