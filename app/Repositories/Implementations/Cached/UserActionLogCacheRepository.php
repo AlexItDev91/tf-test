@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Implementations\Cached;
 
+use App\Enums\UserAction;
 use App\Repositories\Contracts\UserActionLogRepositoryContract;
 
 class UserActionLogCacheRepository implements UserActionLogRepositoryContract
@@ -12,7 +13,7 @@ class UserActionLogCacheRepository implements UserActionLogRepositoryContract
 
     public function log(
         int $userId,
-        string $action,
+        UserAction $action,
         array $context = []
     ): void {
         $this->inner->log($userId, $action, $context);

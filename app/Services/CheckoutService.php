@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTOs\SaleItemDataDto;
 use App\Enums\SaleStatus;
+use App\Enums\UserAction;
 use App\Exceptions\CartEmptyException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\CartItem;
@@ -83,7 +84,7 @@ class CheckoutService
 
             $this->cartRepository->clear($cart->id);
 
-            $this->userActionLogRepository->log($userId, 'checkout.success', [
+            $this->userActionLogRepository->log($userId, UserAction::CHECKOUT_SUCCESS, [
                 'sale_id' => (int) $sale->id,
                 'total_cents' => $totalCents,
             ]);

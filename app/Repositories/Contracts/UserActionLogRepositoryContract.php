@@ -2,11 +2,13 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Enums\UserAction;
+
 interface UserActionLogRepositoryContract
 {
     public function log(
         int $userId,
-        string $action,
+        UserAction $action,
         array $context = []
     ): void;
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserAction;
 use App\Models\Cart;
 use App\Repositories\Contracts\CartRepositoryContract;
 use App\Repositories\Contracts\ProductRepositoryContract;
@@ -45,7 +46,7 @@ class CartService
 
         $this->cartRepository->incrementItemQuantity($cart->id, $productId, $quantity);
 
-        $this->userActionLogRepository->log($userId, 'cart.add', [
+        $this->userActionLogRepository->log($userId, UserAction::CART_ADD, [
             'product_id' => $productId,
             'quantity' => $quantity,
         ]);
@@ -61,7 +62,7 @@ class CartService
             $this->cartRepository->upsertItemQuantity($cart->id, $productId, $quantity);
         }
 
-        $this->userActionLogRepository->log($userId, 'cart.update_quantity', [
+        $this->userActionLogRepository->log($userId, UserAction::CART_UPDATE_QUANTITY, [
             'product_id' => $productId,
             'quantity' => $quantity,
         ]);
@@ -73,7 +74,7 @@ class CartService
 
         $this->cartRepository->removeItem($cart->id, $productId);
 
-        $this->userActionLogRepository->log($userId, 'cart.remove', [
+        $this->userActionLogRepository->log($userId, UserAction::CART_REMOVE, [
             'product_id' => $productId,
         ]);
     }
@@ -84,7 +85,7 @@ class CartService
 
         $this->cartRepository->clear($cart->id);
 
-        $this->userActionLogRepository->log($userId, 'cart.clear');
+        $this->userActionLogRepository->log($userId, UserAction::CART_CLEAR);
     }
 
     public function totalCents(int $userId): int
