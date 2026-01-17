@@ -5,6 +5,7 @@ namespace App\Repositories\Implementations\Eloquent;
 use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
+use Illuminate\Database\Eloquent\Collection;
 
 class SaleRepository implements SaleRepositoryContract
 {
@@ -36,5 +37,18 @@ class SaleRepository implements SaleRepositoryContract
         return Sale::query()
             ->with('items')
             ->find($saleId);
+    }
+
+    public function getByUserId(int $userId): Collection
+    {
+        return Sale::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function getById(int $saleId): ?Sale
+    {
+        return Sale::query()->find($saleId);
     }
 }

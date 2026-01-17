@@ -5,6 +5,7 @@ namespace App\Repositories\Implementations\Cached;
 use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Repositories\Contracts\SaleRepositoryContract;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class SaleCacheRepository implements SaleRepositoryContract
@@ -22,14 +23,14 @@ class SaleCacheRepository implements SaleRepositoryContract
     {
         $this->inner->updateTotalCents($saleId, $totalCents);
 
-        Cache::forget($this->cacheKey($saleId));
+        Cache::forget($this->cacheKeyById($saleId));
     }
 
     public function setStatus(int $saleId, SaleStatus $status): void
     {
         $this->inner->setStatus($saleId, $status);
 
-        Cache::forget($this->cacheKey($saleId));
+        Cache::forget($this->cacheKeyById($saleId));
     }
 
     public function getWithItems(int $saleId): ?Sale
@@ -44,5 +45,24 @@ class SaleCacheRepository implements SaleRepositoryContract
     private function cacheKey(int $saleId): string
     {
         return "sale:with_items:{$saleId}";
+    }
+
+    public function getByUserId(int $userId): Collection
+    {
+        return $this->inner->getByUserId($userId);
+    }
+
+    public function getById(int $saleId): ?Sale
+    {
+        return Cache::remember(
+            $this->cacheKeyById($saleId),
+            now()->addMinutes(10),
+            fn () => $this->inner->getById($saleId)
+        );
+    }
+
+    private function cacheKeyById(int $saleId): string
+    {
+        return "sale:id:{$saleId}";
     }
 }

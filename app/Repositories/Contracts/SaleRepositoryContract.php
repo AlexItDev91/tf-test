@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Enums\SaleStatus;
 use App\Models\Sale;
+use Illuminate\Database\Eloquent\Collection;
 
 interface SaleRepositoryContract
 {
@@ -14,4 +15,8 @@ interface SaleRepositoryContract
     public function setStatus(int $saleId, SaleStatus $status): void;
 
     public function getWithItems(int $saleId): ?Sale;
+
+    public function getByUserId(int $userId): Collection;
+
+    public function getById(int $saleId): ?Sale;
 }
