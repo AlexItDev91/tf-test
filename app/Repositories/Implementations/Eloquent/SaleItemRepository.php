@@ -28,9 +28,9 @@ class SaleItemRepository implements SaleItemRepositoryContract
                 'sale_id' => $saleId,
                 'product_id' => $item['product_id'],
                 'product_name' => $item['product_name'],
-                'unit_price' => $item['unit_price'],
+                'unit_price_cents' => $item['unit_price_cents'],
                 'quantity' => $item['quantity'],
-                'line_total' => $item['line_total'],
+                'line_total_cents' => $item['line_total_cents'],
             ]);
         }
     }
