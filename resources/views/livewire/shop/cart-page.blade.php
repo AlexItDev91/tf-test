@@ -10,7 +10,7 @@
     </div>
 
     @if($items->isEmpty())
-        <div class="rounded-lg border p-4 text-gray-600">
+        <div class="rounded-lg border p-4 text-gray-600 text-center">
             Cart is empty
         </div>
     @else
@@ -26,7 +26,7 @@
                 <div class="flex items-center justify-between rounded-lg border p-4">
                     <div class="space-y-1">
                         <div class="font-medium">{{ $name }}</div>
-                        <div class="text-sm text-gray-600">
+                        <div class="text-bold text-white">
                             {{ \App\Helpers\MoneyHelper::toMoney($priceCents) }}
                         </div>
                     </div>
@@ -55,7 +55,7 @@
 
         <div class="flex items-center justify-between rounded-lg border p-4">
             <div class="font-medium">Total</div>
-            <div class="font-semibold">{{ \App\Helpers\MoneyHelper::toMoney($totalCents) }}</div>
+            <div class="font-bold text-white">{{ \App\Helpers\MoneyHelper::toMoney($totalCents) }}</div>
         </div>
 
             <div class="flex items-center gap-2">

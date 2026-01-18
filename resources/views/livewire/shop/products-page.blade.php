@@ -15,7 +15,7 @@
                 <div class="space-y-1">
                     <div class="font-medium">{{ $product->name }}</div>
                     <div class="text-sm text-gray-600">
-                        <span class="font-bold">{{ \App\Helpers\MoneyHelper::toMoney($product->price_cents) }}</span>
+                        <span class="font-bold text-white">{{ \App\Helpers\MoneyHelper::toMoney($product->price_cents) }}</span>
                         · stock: {{ (int) $product->stock }}
                     </div>
                 </div>

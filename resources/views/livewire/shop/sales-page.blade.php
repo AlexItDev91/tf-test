@@ -13,15 +13,15 @@
         @forelse($sales as $sale)
             <a
                 href="{{ route('shop.sales.show', (int) $sale->id) }}"
-                class="block rounded-lg border p-4 hover:bg-gray-50"
+                class="block rounded-lg border p-4 hover:bg-gray-300/10"
             >
                 <div class="flex items-center justify-between">
                     <div class="font-medium">#{{ (int) $sale->id }}</div>
-                    <div class="text-sm text-gray-600">{{ $sale->status->value }}</div>
+                    <div class="text-sm text-green-300">{{ $sale->status->value }}</div>
                 </div>
 
                 <div class="text-sm text-gray-600">
-                    Total: {{ \App\Helpers\MoneyHelper::toMoney($sale->total_cents) }}
+                    Total: <span class="font-bold text-white">{{ \App\Helpers\MoneyHelper::toMoney($sale->total_cents) }}</span>
                 </div>
             </a>
         @empty
