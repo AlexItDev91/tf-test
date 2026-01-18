@@ -59,7 +59,7 @@ it('completes the full flow: register, auth, cart, buy, low stock notification, 
     // After buying 8, stock is 2. 2 <= 3 (threshold), and previous stock was 10 > 3.
     // LowStockMail implements ShouldQueue, so with Mail::fake() we check assertQueued
     Mail::assertQueued(LowStockMail::class, function ($mail) use ($product) {
-        return $mail->product->id === $product->id;
+        return (int) $mail->productId === (int) $product->id;
     });
 
     // 6. Daily report

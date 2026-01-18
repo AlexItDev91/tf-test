@@ -79,9 +79,9 @@ test('it can decrement stock if available', function () {
     $this->assertDatabaseHas('products', ['id' => $product->id, 'stock' => 6]);
 
     Event::assertDispatched(ProductStockChanged::class, function ($event) use ($product) {
-        return $event->product->id === $product->id &&
-               $event->previousStock === 10 &&
-               $event->newStock === 6;
+        return (int) $event->productId === (int) $product->id &&
+               (int) $event->previousStock === 10 &&
+               (int) $event->newStock === 6;
     });
 });
 

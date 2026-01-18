@@ -54,23 +54,23 @@ class ProductRepository implements ProductRepositoryContract
 
     public function decrementStockIfAvailable(int $productId, int $quantity): bool
     {
-        $updated = Product::query()
-            ->whereKey($productId)
-            ->where('stock', '>=', $quantity)
-            ->update([
-                'stock' => DB::raw("stock - {$quantity}"),
-            ]);
+        $product = Product::query()->lockForUpdate()->find($productId);
 
-        if ($updated !== 1) {
+        if (! $product || (int) $product->stock < $quantity) {
             return false;
         }
 
-        $product = Product::query()->find($productId);
+        $previousStock = (int) $product->stock;
+        $newStock = $previousStock - $quantity;
+
+        $product->stock = $newStock;
+        $product->save();
 
         event(new ProductStockChanged(
-            product: $product,
-            previousStock: $product->stock + $quantity,
-            newStock: $product->stock,
+            productId: (int) $product->id,
+            productName: (string) $product->name,
+            previousStock: $previousStock,
+            newStock: $newStock,
         ));
 
         return true;

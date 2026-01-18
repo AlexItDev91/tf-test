@@ -5,6 +5,7 @@ namespace App\Services;
 use App\DTOs\SaleItemDataDto;
 use App\Enums\SaleStatus;
 use App\Enums\UserAction;
+use App\Events\ProductStockChanged;
 use App\Exceptions\CartEmptyException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\CartItem;
@@ -46,9 +47,8 @@ class CheckoutService
             $saleItems = [];
             $totalCents = 0;
 
-            /** @var CartItem|null $item */
+            /** @var CartItem $item */
             foreach ($items as $item) {
-
                 $product = $item->product;
 
                 if (! $product) {
@@ -57,7 +57,7 @@ class CheckoutService
 
                 $qty = (int) $item->quantity;
 
-                $ok = $this->productRepository->decrementStockIfAvailable($product->id, $qty);
+                $ok = $this->productRepository->decrementStockIfAvailable((int) $product->id, $qty);
 
                 if (! $ok) {
                     throw new InsufficientStockException((int) $product->id);
@@ -77,19 +77,19 @@ class CheckoutService
                 );
             }
 
-            $this->saleItemRepository->bulkCreate($sale->id, $saleItems);
+            $this->saleItemRepository->bulkCreate((int) $sale->id, $saleItems);
 
-            $this->saleRepository->updateTotalCents($sale->id, $totalCents);
-            $this->saleRepository->setStatus($sale->id, SaleStatus::PAID);
+            $this->saleRepository->updateTotalCents((int) $sale->id, $totalCents);
+            $this->saleRepository->setStatus((int) $sale->id, SaleStatus::PAID);
 
-            $this->cartRepository->clear($cart->id);
+            $this->cartRepository->clear((int) $cart->id);
 
             $this->userActionLogRepository->log($userId, UserAction::CHECKOUT_SUCCESS, $sale, [
                 'sale_id' => (int) $sale->id,
                 'total_cents' => $totalCents,
             ]);
 
-            return $this->saleRepository->getWithItems($sale->id) ?? $sale;
+            return $this->saleRepository->getWithItems((int) $sale->id) ?? $sale;
         });
     }
 }

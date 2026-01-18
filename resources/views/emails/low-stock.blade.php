@@ -1,9 +1,9 @@
 <x-mail::message>
     # Low stock alert
 
-    - **Product:** {{ $product->name }}
-    - **Product ID:** {{ (int) $product->id }}
-    - **Stock left:** {{ (int) $product->stock }}
+    Product: **{{ $productName }}**
+    Product ID: **{{ (int) $productId }}**
+    Stock left: **{{ (int) $stockLeft }}**
 
     Thanks,<br>
     {{ config('app.name') }}

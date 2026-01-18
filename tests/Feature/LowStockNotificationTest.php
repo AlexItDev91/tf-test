@@ -40,9 +40,9 @@ it('queues low stock mail after real checkout when stock crosses threshold', fun
 
     Mail::assertQueued(LowStockMail::class, function (LowStockMail $mail) use ($product) {
         return $mail->hasTo('admin@example.test')
-            && (int) $mail->product->id === (int) $product->id
-            && (string) $mail->product->name === 'Test Product'
-            && (int) $mail->product->stock === 2;
+            && (int) $mail->productId === (int) $product->id
+            && (string) $mail->productName === 'Test Product'
+            && (int) $mail->stockLeft === 2;
     });
 });
 

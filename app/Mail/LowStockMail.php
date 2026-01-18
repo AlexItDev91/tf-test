@@ -2,12 +2,9 @@
 
 namespace App\Mail;
 
-use App\Models\Product;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class LowStockMail extends Mailable implements ShouldQueue
@@ -15,28 +12,18 @@ class LowStockMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public function __construct(
-        public readonly Product $product
+        public readonly int $productId,
+        public readonly string $productName,
+        public readonly int $stockLeft,
     ) {}
 
-    public function envelope(): Envelope
+    public function build(): self
     {
-        return new Envelope(
-            subject: "Low stock: {$this->product->name}",
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.low-stock',
-            with: [
-                'product' => $this->product,
-            ],
-        );
-    }
-
-    public function attachments(): array
-    {
-        return [];
+        return $this->subject('Low stock alert')
+            ->markdown('emails.low-stock', [
+                'productId' => $this->productId,
+                'productName' => $this->productName,
+                'stockLeft' => $this->stockLeft,
+            ]);
     }
 }
