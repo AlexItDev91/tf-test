@@ -1,6 +1,6 @@
 <div class="space-y-6">
     @if (session('status'))
-        <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div class="rounded-lg border border-green-200 bg-transparent px-4 py-3 text-sm text-green-200">
             {{ session('status') }}
         </div>
     @endif
@@ -15,7 +15,7 @@
                 <div class="space-y-1">
                     <div class="font-medium">{{ $product->name }}</div>
                     <div class="text-sm text-gray-600">
-                        {{ number_format(((int) $product->price_cents) / 100, 2) }}
+                        <span class="font-bold">{{ number_format(((int) $product->price_cents) / 100, 2) }}</span>
                         · stock: {{ (int) $product->stock }}
                     </div>
                 </div>
