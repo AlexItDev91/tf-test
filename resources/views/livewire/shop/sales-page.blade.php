@@ -21,7 +21,7 @@
                 </div>
 
                 <div class="text-sm text-gray-600">
-                    Total: {{ number_format(((int) $sale->total_cents) / 100, 2) }}
+                    Total: {{ \App\Helpers\MoneyHelper::toMoney($sale->total_cents) }}
                 </div>
             </a>
         @empty

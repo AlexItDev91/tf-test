@@ -4,7 +4,7 @@
     **Date:** {{ $date }}
     **Orders:** {{ $ordersCount }}
     **Items sold:** {{ $itemsCount }}
-    **Revenue:** {{ number_format($totalCents / 100, 2, '.', '') }}
+    **Revenue:** {{ \App\Helpers\MoneyHelper::toMoney($totalCents) }}
 
     @if(empty($lines))
         No sales today.
@@ -12,7 +12,7 @@
         ## Sold products
 
         @foreach($lines as $row)
-            - **{{ $row['name'] }}** — qty: {{ $row['qty'] }}, revenue: {{ number_format($row['revenue_cents'] / 100, 2, '.', '') }}
+            - **{{ $row['name'] }}** — qty: {{ $row['qty'] }}, revenue: {{ \App\Helpers\MoneyHelper::toMoney($row['revenue_cents']) }}
         @endforeach
     @endif
 

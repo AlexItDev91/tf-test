@@ -10,7 +10,7 @@
         </div>
         <div class="flex items-center justify-between">
             <div class="text-sm text-gray-600">Total</div>
-            <div class="font-medium">{{ number_format(((int) $sale->total_cents) / 100, 2) }}</div>
+            <div class="font-medium">{{ \App\Helpers\MoneyHelper::toMoney($sale->total_cents) }}</div>
         </div>
         <div class="flex items-center justify-between">
             <div class="text-sm text-gray-600">Created</div>
@@ -24,13 +24,13 @@
                 <div>
                     <div class="font-medium">{{ $item->product_name }}</div>
                     <div class="text-sm text-gray-600">
-                        {{ number_format(((int) $item->unit_price_cents) / 100, 2) }}
+                        {{ \App\Helpers\MoneyHelper::toMoney($item->unit_price_cents) }}
                         × {{ (int) $item->quantity }}
                     </div>
                 </div>
 
                 <div class="font-medium">
-                    {{ number_format(((int) $item->line_total_cents) / 100, 2) }}
+                    {{ \App\Helpers\MoneyHelper::toMoney($item->line_total_cents) }}
                 </div>
             </div>
         @endforeach

@@ -27,7 +27,7 @@
                     <div class="space-y-1">
                         <div class="font-medium">{{ $name }}</div>
                         <div class="text-sm text-gray-600">
-                            {{ number_format($priceCents / 100, 2) }}
+                            {{ \App\Helpers\MoneyHelper::toMoney($priceCents) }}
                         </div>
                     </div>
 
@@ -55,7 +55,7 @@
 
         <div class="flex items-center justify-between rounded-lg border p-4">
             <div class="font-medium">Total</div>
-            <div class="font-semibold">{{ number_format(((int) $totalCents) / 100, 2) }}</div>
+            <div class="font-semibold">{{ \App\Helpers\MoneyHelper::toMoney($totalCents) }}</div>
         </div>
 
             <div class="flex items-center gap-2">
