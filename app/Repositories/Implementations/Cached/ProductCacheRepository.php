@@ -74,16 +74,33 @@ class ProductCacheRepository implements ProductRepositoryContract
 
     private function flushAfterWrite(int $productId): void
     {
+        $this->bumpVersion();
         Cache::forget($this->keyActiveProduct($productId));
     }
 
     private function keyActiveProduct(int $id): string
     {
-        return "product:active:{$id}";
+        $v = $this->version();
+        return "v{$v}:product:active:{$id}";
     }
 
     private function keyActiveList(int $limit, int $offset): string
     {
-        return "products:active:list:limit:{$limit}:offset:{$offset}";
+        $v = $this->version();
+        return "v{$v}:products:active:list:limit:{$limit}:offset:{$offset}";
+    }
+
+    private function version(): int
+    {
+        return (int) Cache::get('products:cache:v', 1);
+    }
+
+    private function bumpVersion(): void
+    {
+        if (! Cache::has('products:cache:v')) {
+            Cache::put('products:cache:v', 1, now()->addDay());
+            return;
+        }
+        Cache::increment('products:cache:v');
     }
 }

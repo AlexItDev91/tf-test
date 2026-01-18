@@ -13,6 +13,7 @@ beforeEach(function () {
 
 test('findActiveById caches the result', function () {
     $product = Product::factory()->make(['id' => 1, 'is_active' => true]);
+    Cache::put('products:cache:v', 1);
 
     $this->inner->shouldReceive('findActiveById')
         ->once()
@@ -28,11 +29,10 @@ test('findActiveById caches the result', function () {
     expect($result2->id)->toBe(1);
 });
 
-test('create flushes the cache', function () {
+test('create flushes the cache by bumping version', function () {
     $product = Product::factory()->make(['id' => 1]);
-
-    // Set some cache
-    Cache::put('product:active:1', $product);
+    Cache::put('products:cache:v', 1);
+    Cache::put('v1:product:active:1', $product);
 
     $this->inner->shouldReceive('create')
         ->once()
@@ -40,12 +40,13 @@ test('create flushes the cache', function () {
 
     $this->repository->create(['name' => 'New']);
 
-    expect(Cache::has('product:active:1'))->toBeFalse();
+    expect((int) Cache::get('products:cache:v'))->toBe(2);
 });
 
-test('update flushes the cache', function () {
+test('update flushes the cache by bumping version', function () {
     $product = Product::factory()->make(['id' => 1]);
-    Cache::put('product:active:1', $product);
+    Cache::put('products:cache:v', 1);
+    Cache::put('v1:product:active:1', $product);
 
     $this->inner->shouldReceive('update')
         ->once()
@@ -54,11 +55,12 @@ test('update flushes the cache', function () {
 
     $this->repository->update(1, ['name' => 'Updated']);
 
-    expect(Cache::has('product:active:1'))->toBeFalse();
+    expect((int) Cache::get('products:cache:v'))->toBe(2);
 });
 
-test('delete flushes the cache', function () {
-    Cache::put('product:active:1', 'some-data');
+test('delete flushes the cache by bumping version', function () {
+    Cache::put('products:cache:v', 1);
+    Cache::put('v1:product:active:1', 'some-data');
 
     $this->inner->shouldReceive('delete')
         ->once()
@@ -66,11 +68,12 @@ test('delete flushes the cache', function () {
 
     $this->repository->delete(1);
 
-    expect(Cache::has('product:active:1'))->toBeFalse();
+    expect((int) Cache::get('products:cache:v'))->toBe(2);
 });
 
 test('decrementStockIfAvailable flushes the cache on success', function () {
-    Cache::put('product:active:1', 'some-data');
+    Cache::put('products:cache:v', 1);
+    Cache::put('v1:product:active:1', 'some-data');
 
     $this->inner->shouldReceive('decrementStockIfAvailable')
         ->once()
@@ -79,11 +82,12 @@ test('decrementStockIfAvailable flushes the cache on success', function () {
 
     $this->repository->decrementStockIfAvailable(1, 5);
 
-    expect(Cache::has('product:active:1'))->toBeFalse();
+    expect((int) Cache::get('products:cache:v'))->toBe(2);
 });
 
 test('decrementStockIfAvailable does NOT flush the cache on failure', function () {
-    Cache::put('product:active:1', 'some-data');
+    Cache::put('products:cache:v', 1);
+    Cache::put('v1:product:active:1', 'some-data');
 
     $this->inner->shouldReceive('decrementStockIfAvailable')
         ->once()
@@ -92,5 +96,5 @@ test('decrementStockIfAvailable does NOT flush the cache on failure', function (
 
     $this->repository->decrementStockIfAvailable(1, 5);
 
-    expect(Cache::has('product:active:1'))->toBeTrue();
+    expect((int) Cache::get('products:cache:v', 1))->toBe(1);
 });
