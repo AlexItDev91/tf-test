@@ -322,6 +322,8 @@ PHP;
             File::ensureDirectoryExists(app_path('Providers'));
             File::put($providerPath, $this->repositoryServiceProviderStub());
             $this->info('Created RepositoryServiceProvider');
+        } else {
+            $this->info('RepositoryServiceProvider already exists');
         }
 
         $this->ensureProviderRegistered();
@@ -338,6 +340,7 @@ PHP;
         $content = File::get($providersFile);
 
         if (str_contains($content, 'App\\Providers\\RepositoryServiceProvider::class')) {
+            $this->info('...and registered in bootstrap/providers.php');
             return;
         }
 
@@ -417,7 +420,7 @@ PHP
         \$this->app->bind({$contractClass}::class, {$repositoryClass}::class);
 
 PHP;
-
+dd($content, $binding);
         $content = $this->insertIntoRegisterMethod($content, $binding);
 
         File::put($providerPath, $content);
@@ -480,18 +483,26 @@ PHP;
 
     private function insertIntoRegisterMethod(string $content, string $bindingBlock): string
     {
-        if (preg_match('/public function register\(\): void\s*\{\s*\n\s*\/\/\s*\n/s', $content)) {
-            return preg_replace(
-                '/public function register\(\): void\s*\{\s*\n\s*\/\/\s*\n/s',
-                "public function register(): void\n    {\n{$bindingBlock}",
+        $pattern1 = '/public function register\(\): void\s*\{\s*\n\s*\/\/\s*\n/s';
+
+        if (preg_match($pattern1, $content)) {
+            return preg_replace_callback(
+                $pattern1,
+                function () use ($bindingBlock) {
+                    return "public function register(): void\n    {\n" . $bindingBlock;
+                },
                 $content,
                 1
             );
         }
 
-        return preg_replace(
-            '/(public function register\(\): void\s*\{\s*\n)/s',
-            '$1'.$bindingBlock,
+        $pattern2 = '/(public function register\(\): void\s*\{\s*\n)/s';
+
+        return preg_replace_callback(
+            $pattern2,
+            function ($m) use ($bindingBlock) {
+                return $m[1] . $bindingBlock;
+            },
             $content,
             1
         );
