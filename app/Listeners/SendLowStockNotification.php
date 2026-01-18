@@ -6,7 +6,7 @@ use App\Events\ProductStockChanged;
 use App\Jobs\SendLowStockNotificationJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SendLowStockNotification implements ShouldQueue
+class SendLowStockNotification
 {
     public bool $afterCommit = true;
 

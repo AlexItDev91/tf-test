@@ -50,6 +50,7 @@ class CheckoutService
             /** @var CartItem $item */
             foreach ($items as $item) {
                 $product = $item->product;
+                $previousStock = (int) $product->stock;
 
                 if (! $product) {
                     throw new RuntimeException('Product not available');
@@ -62,6 +63,15 @@ class CheckoutService
                 if (! $ok) {
                     throw new InsufficientStockException((int) $product->id);
                 }
+
+                $newStock = $previousStock - $qty;
+
+                event(new ProductStockChanged(
+                    productId: (int) $product->id,
+                    productName: (string) $product->name,
+                    previousStock: $previousStock,
+                    newStock: $newStock,
+                ));
 
                 $unitCents = (int) $product->price_cents;
                 $lineCents = $unitCents * $qty;
