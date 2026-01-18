@@ -1,34 +1,57 @@
-# .github/workflows/tests.yml
 name: Tests
 
 on:
   push:
+    branches: [develop, main]
   pull_request:
-  workflow_dispatch:
+    branches: [develop, main]
+
+permissions:
+  contents: read
 
 jobs:
   tests:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup PHP 8.5
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: mbstring, pdo, sqlite
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3
           coverage: none
 
-      - name: Copy env
-        run: cp .env.example .env
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Add Flux credentials (if provided)
+        if: ${{ secrets.FLUX_USERNAME != '' && secrets.FLUX_LICENSE_KEY != '' }}
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: Generate app key
-        run: php artisan key:generate
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan config:clear
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build assets (Vite manifest)
+        run: npm run build
 
       - name: Run tests
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ":memory:"
         run: php artisan test
