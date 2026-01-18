@@ -11,15 +11,9 @@ use Illuminate\Support\Facades\Mail;
 use Livewire\Volt\Volt;
 
 it('completes full flow: auth → cart → checkout → low stock mail → daily report', function () {
-    /*
-    |--------------------------------------------------------------------------
-    | Arrange
-    |--------------------------------------------------------------------------
-    */
     Mail::fake();
     Bus::fake();
 
-    // Create product with enough stock
     $product = Product::factory()->create([
         'name' => 'Flow Product',
         'stock' => 10,
@@ -29,7 +23,7 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
 
     /*
     |--------------------------------------------------------------------------
-    | 1. Register
+    | Register
     |--------------------------------------------------------------------------
     */
     Volt::test('pages.auth.register')
@@ -40,15 +34,12 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
         ->call('register')
         ->assertRedirect(route('home', absolute: false));
 
-    $this->assertAuthenticated();
-
-    /** @var User $user */
-    $user = User::where('email', 'test@example.com')->first();
-    expect($user)->not->toBeNull();
+    $user = User::whereEmail('test@example.com')->firstOrFail();
+    $this->assertAuthenticatedAs($user);
 
     /*
     |--------------------------------------------------------------------------
-    | 2. Logout → Login (full auth cycle)
+    | Logout → Login
     |--------------------------------------------------------------------------
     */
     $this->post(route('logout'))->assertRedirect('/');
@@ -64,7 +55,7 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
 
     /*
     |--------------------------------------------------------------------------
-    | 3. Add to cart (8 items)
+    | Add to cart
     |--------------------------------------------------------------------------
     */
     $this->post(route('cart.items.store'), [
@@ -74,49 +65,32 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
 
     /*
     |--------------------------------------------------------------------------
-    | 4. Checkout
+    | Checkout
     |--------------------------------------------------------------------------
     */
-    $response = $this->post(route('checkout.store'));
-
-    $response
+    $this->post(route('checkout.store'))
         ->assertSuccessful()
         ->assertJsonPath('status', 'paid')
         ->assertJsonPath('total_cents', 8000);
 
-    /*
-    |--------------------------------------------------------------------------
-    | 5. Assert stock changed
-    |--------------------------------------------------------------------------
-    */
     $product->refresh();
-    expect($product->stock)->toBe(2); // 10 - 8
+    expect($product->stock)->toBe(2);
 
     /*
     |--------------------------------------------------------------------------
-    | 6. Low stock notification (CQRS)
-    |--------------------------------------------------------------------------
-    | threshold = 3
-    | previous = 10
-    | new = 2 → should notify
+    | Low stock notification (CQRS)
     |--------------------------------------------------------------------------
     */
+    Bus::assertDispatched(
+        SendLowStockNotificationJob::class,
+        function (SendLowStockNotificationJob $job) use ($product) {
+            // выполняем реальный job
+            $job->handle();
 
-    // 6.1 Job dispatched by listener
-    Bus::assertDispatched(SendLowStockNotificationJob::class, function ($job) use ($product) {
-        return $job->productId === $product->id;
-    });
-
-    // 6.2 Run job manually (Bus::fake prevents auto execution)
-    $job = new SendLowStockNotificationJob(
-        productId: $product->id,
-        productName: $product->name,
-        previousStock: 10,
-        newStock: 2,
+            return $job->productId === $product->id;
+        }
     );
-    $job->handle();
 
-    // 6.3 Mail sent by job
     Mail::assertQueued(LowStockMail::class, function ($mail) use ($product) {
         return $mail->productId === $product->id
             && $mail->stockLeft === 2;
@@ -124,19 +98,20 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
 
     /*
     |--------------------------------------------------------------------------
-    | 7. Daily sales report
+    | Daily sales report
     |--------------------------------------------------------------------------
     */
     $this->artisan('report:daily-sales')
-        ->expectsOutput(
-            'Daily sales report job dispatched for '.now()->toDateString()
-        )
+        ->expectsOutput('Daily sales report job dispatched for '.now()->toDateString())
         ->assertSuccessful();
 
-    Bus::assertDispatched(SendDailySalesReportJob::class);
-
-    $job = new SendDailySalesReportJob(now()->toDateString());
-    $this->app->call([$job, 'handle']);
+    Bus::assertDispatched(
+        SendDailySalesReportJob::class,
+        function (SendDailySalesReportJob $job) {
+            $this->app->call([$job, 'handle']);
+            return true;
+        }
+    );
 
     Mail::assertSent(DailySalesReportMail::class, function ($mail) {
         return $mail->ordersCount === 1
