@@ -41,7 +41,6 @@
                         wire:click="addToCart({{ (int) $product->id }})"
                         :disabled="$disabled"
                     >
-                        <flux:icon.ca variant="mini" class="block" />
                         Add
                     </flux:button>
                 @endif
