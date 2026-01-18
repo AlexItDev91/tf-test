@@ -420,7 +420,6 @@ PHP
         \$this->app->bind({$contractClass}::class, {$repositoryClass}::class);
 
 PHP;
-dd($content, $binding);
         $content = $this->insertIntoRegisterMethod($content, $binding);
 
         File::put($providerPath, $content);
