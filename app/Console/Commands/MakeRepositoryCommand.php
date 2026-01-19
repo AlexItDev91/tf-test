@@ -259,12 +259,19 @@ class MakeRepositoryCommand extends Command
 
     private function renderEloquentTestStub(array $vars, ?string $modelClass): string
     {
-        return $this->stub(
-            $this->isPest()
-                ? ($modelClass ? 'tests/pest/repository-eloquent-model' : 'tests/pest/repository-eloquent-generic')
-                : ($modelClass ? 'tests/phpunit/repository-eloquent-model' : 'tests/phpunit/repository-eloquent-generic'),
-            $vars
-        );
+        $hasModel = $modelClass !== null;
+
+        if ($this->isPest()) {
+            $stub = $hasModel
+                ? 'tests/pest/repository-eloquent-model'
+                : 'tests/pest/repository-eloquent-generic';
+        } else {
+            $stub = $hasModel
+                ? 'tests/phpunit/repository-eloquent-model'
+                : 'tests/phpunit/repository-eloquent-generic';
+        }
+
+        return $this->stub($stub, $vars);
     }
 
     private function renderCacheTestStub(array $vars, ?string $modelClass): string
@@ -358,7 +365,7 @@ class MakeRepositoryCommand extends Command
 
     private function writeFile(string $path, string $content, bool $force): int
     {
-        if (File::exists($path) && ! $force) {
+        if (! $force && File::exists($path)) {
             $this->warn('Skip (exists): '.$this->relative($path));
 
             return 0;
