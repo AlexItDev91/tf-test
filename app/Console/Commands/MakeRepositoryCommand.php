@@ -269,12 +269,19 @@ class MakeRepositoryCommand extends Command
 
     private function renderCacheTestStub(array $vars, ?string $modelClass): string
     {
-        return $this->stub(
-            $this->isPest()
-                ? ($modelClass ? 'tests/pest/repository-cache-model' : 'tests/pest/repository-cache-generic')
-                : ($modelClass ? 'tests/phpunit/repository-cache-model' : 'tests/phpunit/repository-cache-generic'),
-            $vars
-        );
+        $hasModel = $modelClass !== null;
+
+        if ($this->isPest()) {
+            $stub = $hasModel
+                ? 'tests/pest/repository-cache-model'
+                : 'tests/pest/repository-cache-generic';
+        } else {
+            $stub = $hasModel
+                ? 'tests/phpunit/repository-cache-model'
+                : 'tests/phpunit/repository-cache-generic';
+        }
+
+        return $this->stub($stub, $vars);
     }
 
     private function normalizeBaseName(string $inputName): string
