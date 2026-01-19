@@ -1,0 +1,10 @@
+<?php
+
+namespace App\Repositories\Implementations\Eloquent;
+
+use App\Repositories\Contracts\{{ contract_class }};
+
+class {{ repository_class }} implements {{ contract_class }}
+{
+    // Implement repository logic here
+}

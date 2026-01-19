@@ -1,0 +1,11 @@
+<?php
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+it('can be instantiated', function () {
+    $repo = new \App\Repositories\Implementations\Eloquent\{{ repository_class }}();
+
+    expect($repo)->toBeObject();
+});

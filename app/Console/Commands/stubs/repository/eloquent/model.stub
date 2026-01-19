@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Repositories\Implementations\Eloquent;
+
+use App\Repositories\Contracts\{{ contract_class }};
+{{ model_use }}
+
+class {{ repository_class }} implements {{ contract_class }}
+{
+    public function findOrFail(int $id): {{ model }}
+    {
+        return {{ model }}::query()->findOrFail($id);
+    }
+
+    public function findById(int $id): ?{{ model }}
+    {
+        return {{ model }}::query()->find($id);
+    }
+
+    public function getAll(): \Illuminate\Support\Collection
+    {
+        return {{ model }}::query()->get();
+    }
+
+    public function get(int $limit = 50, int $offset = 0): \Illuminate\Support\Collection
+    {
+        return {{ model }}::query()
+            ->limit($limit)
+            ->offset($offset)
+            ->get();
+    }
+
+    public function paginate(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return {{ model }}::query()->paginate($perPage);
+    }
+
+    public function create(array $data): {{ model }}
+    {
+        return {{ model }}::query()->create($data);
+    }
+
+    public function update(int $id, array $data): {{ model }}
+    {
+        $model = {{ model }}::query()->findOrFail($id);
+        $model->fill($data);
+        $model->save();
+
+        return $model;
+    }
+
+    public function delete(int $id): bool
+    {
+        return {{ model }}::query()->whereKey($id)->delete() > 0;
+    }
+}

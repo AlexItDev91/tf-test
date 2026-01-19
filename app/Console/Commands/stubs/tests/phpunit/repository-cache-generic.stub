@@ -1,0 +1,20 @@
+<?php
+
+namespace Tests\Unit\Repositories;
+
+use App\Repositories\Contracts\{{ contract_class }};
+use App\Repositories\Implementations\Cached\{{ cache_class }};
+use Mockery;
+use Tests\TestCase;
+
+class {{ cache_test_class }} extends TestCase
+{
+    public function test_it_delegates_to_inner(): void
+    {
+        $inner = Mockery::mock({{ contract_class }}::class);
+
+        $repo = new {{ cache_class }}($inner);
+
+        $this->assertIsObject($repo);
+    }
+}

@@ -1,0 +1,13 @@
+<?php
+
+use Illuminate\Support\Facades\Cache;
+
+it('delegates to inner', function () {
+    $inner = Mockery::mock(\App\Repositories\Contracts\{{ contract_class }}::class);
+
+    $repo = new \App\Repositories\Implementations\Cached\{{ cache_class }}($inner);
+
+    expect($repo)->toBeObject();
+
+    Cache::clearResolvedInstances();
+});

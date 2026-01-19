@@ -11,11 +11,12 @@ use function Laravel\Prompts\text;
 
 class MakeRepositoryCommand extends Command
 {
-    protected $signature = 'make:app-repository
+    protected $signature = 'make:repository
         {name? : Repository name (e.g. ProductRepository or Product)}
         {--model= : Optional model class name (e.g. Product)}
         {--no-cache : Do not generate Cached implementation}
-        {--force : Overwrite existing files}';
+        {--force : Overwrite existing files}
+        {--tests : Generate repository tests (Pest or PHPUnit auto-detected)}';
 
     protected $description = 'Create repository Contract + Implementations (Eloquent + optional Cached)';
 
@@ -28,6 +29,7 @@ class MakeRepositoryCommand extends Command
             modelClass: $input['modelClass'],
             withCache: $input['withCache'],
             force: $input['force'],
+            withTests: $input['withTests'],
         );
     }
 
@@ -42,8 +44,16 @@ class MakeRepositoryCommand extends Command
         $model = $this->option('model');
         $model = is_string($model) ? trim($model) : '';
 
+        $withTests = (bool) $this->option('tests');
+
         if (! $hasName) {
-            return $this->wizard();
+            $wiz = $this->wizard();
+
+            // allow overriding from option (CLI wins)
+            $wiz['force'] = $force ?: $wiz['force'];
+            $wiz['withTests'] = $withTests ?: $wiz['withTests'];
+
+            return $wiz;
         }
 
         $inputName = Str::studly($name);
@@ -54,6 +64,7 @@ class MakeRepositoryCommand extends Command
             'modelClass' => $model !== '' ? Str::studly($model) : null,
             'withCache' => $withCache,
             'force' => $force,
+            'withTests' => $withTests,
         ];
     }
 
@@ -69,10 +80,9 @@ class MakeRepositoryCommand extends Command
         $baseName = $this->normalizeBaseName($inputName);
 
         $model = text(
-            label: 'Which model should this repository use?',
-            placeholder: 'E.g. Product or leave empty',
-            required: false,
-            hint: 'Leave empty if repository is not tied to a model'
+            label: 'Which model should this repository work with? (optional)',
+            placeholder: 'E.g. Product (leave empty if not tied to a model)',
+            hint: 'We do not create the model, we only type-hint it in the repository.'
         );
 
         $modelClass = $model !== '' ? Str::studly($model) : null;
@@ -82,15 +92,27 @@ class MakeRepositoryCommand extends Command
             default: true
         );
 
-        // проверка существующих файлов
+        $withTests = confirm(
+            label: 'Generate tests?',
+            default: true
+        );
+
         $paths = $this->paths($baseName);
         $force = (bool) $this->option('force');
 
-        if (! $force && (
+        $testPaths = $this->testPaths($baseName, $modelClass, $withCache);
+
+        $hasExisting = (
             File::exists($paths['contract']) ||
             File::exists($paths['eloquent']) ||
-            ($withCache && File::exists($paths['cached']))
-        )) {
+            ($withCache && File::exists($paths['cached'])) ||
+            ($withTests && (
+                File::exists($testPaths['eloquent_test']) ||
+                ($withCache && File::exists($testPaths['cache_test']))
+            ))
+        );
+
+        if (! $force && $hasExisting) {
             $force = confirm(
                 label: 'Some files already exist. Overwrite?',
                 default: false
@@ -102,56 +124,157 @@ class MakeRepositoryCommand extends Command
             'modelClass' => $modelClass,
             'withCache' => $withCache,
             'force' => $force,
+            'withTests' => $withTests,
         ];
     }
 
-    private function generate(string $baseName, ?string $modelClass, bool $withCache, bool $force): int
-    {
+    private function generate(
+        string $baseName,
+        ?string $modelClass,
+        bool $withCache,
+        bool $force,
+        bool $withTests
+    ): int {
         $repositoryClass = $baseName.'Repository';
         $contractClass = $baseName.'RepositoryContract';
         $cacheClass = $baseName.'CacheRepository';
 
         $paths = $this->paths($baseName);
+        $testPaths = $this->testPaths($baseName, $modelClass, $withCache);
 
-        $this->ensureDirectories($withCache);
+        $this->ensureDirectories($withCache, $withTests, $testPaths);
+
+        $vars = [
+            'base_name' => $baseName,
+            'repository_class' => $repositoryClass,
+            'contract_class' => $contractClass,
+            'cache_class' => $cacheClass,
+
+            'model' => $modelClass ?? '',
+            'model_use' => $modelClass ? "use App\\Models\\{$modelClass};" : '',
+
+            // cache key prefix: prefer model name, fallback to base
+            'key_prefix' => Str::snake($modelClass ?: $baseName),
+
+            // test helpers
+            'eloquent_test_class' => $baseName.'RepositoryTest',
+            'cache_test_class' => $cacheClass.'Test',
+        ];
 
         $created = 0;
 
         $created += $this->writeFile(
             $paths['contract'],
-            $this->buildContract($contractClass, $modelClass),
+            $this->renderContractStub($vars, $modelClass),
             $force
         );
 
         $created += $this->writeFile(
             $paths['eloquent'],
-            $this->buildEloquentImplementation($repositoryClass, $contractClass, $modelClass),
+            $this->renderEloquentStub($vars, $modelClass),
             $force
         );
 
         if ($withCache) {
             $created += $this->writeFile(
                 $paths['cached'],
-                $this->buildCachedImplementation($cacheClass, $contractClass, $modelClass),
+                $this->renderCachedStub($vars, $modelClass),
                 $force
             );
         }
 
-        if ($created === 0) {
-            $this->info('Nothing to do (all files already exist). Use --force to overwrite.');
-        } else {
-            $this->info('Repository generated:');
-            $this->line(' - '.$this->relative($paths['contract']));
-            $this->line(' - '.$this->relative($paths['eloquent']));
+        $createdProvider = false;
+
+        if ($created > 0) {
+            $createdProvider = $this->ensureRepositoryServiceProviderExists();
+            $this->appendBindingToRepositoryServiceProvider($baseName, $withCache);
+        }
+
+        if ($withTests) {
+            $created += $this->writeFile(
+                $testPaths['eloquent_test'],
+                $this->renderEloquentTestStub($vars, $modelClass),
+                $force
+            );
+
             if ($withCache) {
-                $this->line(' - '.$this->relative($paths['cached']));
+                $created += $this->writeFile(
+                    $testPaths['cache_test'],
+                    $this->renderCacheTestStub($vars, $modelClass),
+                    $force
+                );
             }
         }
 
-        $this->ensureRepositoryServiceProviderExists();
-        $this->appendBindingToRepositoryServiceProvider($baseName, $withCache);
+        if ($created === 0) {
+            $this->info('Nothing to do (all files already exist). Use --force to overwrite.');
+
+            return self::SUCCESS;
+        }
+
+        $this->info('Generated:');
+        $this->line(' - '.$this->relative($paths['contract']));
+        $this->line(' - '.$this->relative($paths['eloquent']));
+        if ($withCache) {
+            $this->line(' - '.$this->relative($paths['cached']));
+        }
+
+        if ($withTests) {
+            $this->line(' - '.$this->relative($testPaths['eloquent_test']));
+            if ($withCache) {
+                $this->line(' - '.$this->relative($testPaths['cache_test']));
+            }
+        }
+
+        if ($createdProvider) {
+            $this->line(' - app/Providers/RepositoryServiceProvider.php');
+        }
 
         return self::SUCCESS;
+    }
+
+    private function renderContractStub(array $vars, ?string $modelClass): string
+    {
+        return $this->stub(
+            $modelClass ? 'repository/contract/model' : 'repository/contract/generic',
+            $vars
+        );
+    }
+
+    private function renderEloquentStub(array $vars, ?string $modelClass): string
+    {
+        return $this->stub(
+            $modelClass ? 'repository/eloquent/model' : 'repository/eloquent/generic',
+            $vars
+        );
+    }
+
+    private function renderCachedStub(array $vars, ?string $modelClass): string
+    {
+        return $this->stub(
+            $modelClass ? 'repository/cached/model' : 'repository/cached/generic',
+            $vars
+        );
+    }
+
+    private function renderEloquentTestStub(array $vars, ?string $modelClass): string
+    {
+        return $this->stub(
+            $this->isPest()
+                ? ($modelClass ? 'tests/pest/repository-eloquent-model' : 'tests/pest/repository-eloquent-generic')
+                : ($modelClass ? 'tests/phpunit/repository-eloquent-model' : 'tests/phpunit/repository-eloquent-generic'),
+            $vars
+        );
+    }
+
+    private function renderCacheTestStub(array $vars, ?string $modelClass): string
+    {
+        return $this->stub(
+            $this->isPest()
+                ? ($modelClass ? 'tests/pest/repository-cache-model' : 'tests/pest/repository-cache-generic')
+                : ($modelClass ? 'tests/phpunit/repository-cache-model' : 'tests/phpunit/repository-cache-generic'),
+            $vars
+        );
     }
 
     private function normalizeBaseName(string $inputName): string
@@ -185,7 +308,25 @@ class MakeRepositoryCommand extends Command
         ];
     }
 
-    private function ensureDirectories(bool $withCache): void
+    private function testPaths(string $baseName, ?string $modelClass, bool $withCache): array
+    {
+        // keep tests stable regardless of Pest/PHPUnit (folder differs per stub contents)
+        // Pest: tests/Feature/Repositories/* + tests/Unit/Repositories/*
+        // PHPUnit: same paths, but class-based tests.
+        $eloquent = base_path("tests/Feature/Repositories/{$baseName}RepositoryTest.php");
+        $cache = base_path("tests/Unit/Repositories/{$baseName}CacheRepositoryTest.php");
+
+        // Use cache class name in filename to be clearer:
+        // if model-less, still named after baseName
+        $cacheFile = base_path("tests/Unit/Repositories/{$baseName}CacheRepositoryTest.php");
+
+        return [
+            'eloquent_test' => $eloquent,
+            'cache_test' => $cacheFile,
+        ];
+    }
+
+    private function ensureDirectories(bool $withCache, bool $withTests, array $testPaths): void
     {
         $dirs = [
             app_path('Repositories/Contracts'),
@@ -194,6 +335,11 @@ class MakeRepositoryCommand extends Command
 
         if ($withCache) {
             $dirs[] = app_path('Repositories/Implementations/Cached');
+        }
+
+        if ($withTests) {
+            $dirs[] = base_path('tests/Feature/Repositories');
+            $dirs[] = base_path('tests/Unit/Repositories');
         }
 
         foreach ($dirs as $dir) {
@@ -218,195 +364,29 @@ class MakeRepositoryCommand extends Command
 
     private function relative(string $absolutePath): string
     {
-        $app = base_path();
+        $base = base_path();
 
-        return ltrim(Str::replaceFirst($app, '', $absolutePath), DIRECTORY_SEPARATOR);
+        return ltrim(Str::replaceFirst($base, '', $absolutePath), DIRECTORY_SEPARATOR);
     }
 
-    private function buildContract(string $contractClass, ?string $modelClass): string
-    {
-        $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
-        $methods = $this->contractMethods($modelClass);
-
-        return <<<PHP
-<?php
-
-namespace App\Repositories\Contracts;
-
-{$modelUse}interface {$contractClass}
-{
-{$methods}}
-PHP;
-    }
-
-    private function buildEloquentImplementation(string $repositoryClass, string $contractClass, ?string $modelClass): string
-    {
-        $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
-        $imports = "use App\\Repositories\\Contracts\\{$contractClass};\n{$modelUse}";
-        $body = $this->eloquentMethods($modelClass);
-
-        return <<<PHP
-<?php
-
-namespace App\Repositories\Implementations\Eloquent;
-
-{$imports}class {$repositoryClass} implements {$contractClass}
-{
-{$body}}
-PHP;
-    }
-
-    private function buildCachedImplementation(string $cacheClass, string $contractClass, ?string $modelClass): string
-    {
-        $modelUse = $modelClass ? "use App\\Models\\{$modelClass};\n" : '';
-        $imports = "use App\\Repositories\\Contracts\\{$contractClass};\nuse Illuminate\\Support\\Facades\\Cache;\n{$modelUse}";
-        $body = $this->cachedMethods($modelClass);
-
-        return <<<PHP
-<?php
-
-namespace App\Repositories\Implementations\Cached;
-
-{$imports}class {$cacheClass} implements {$contractClass}
-{
-    public function __construct(
-        private readonly {$contractClass} \$inner
-    ) {}
-
-{$body}}
-PHP;
-    }
-
-    private function contractMethods(?string $modelClass): string
-    {
-        if ($modelClass) {
-            $model = $modelClass;
-
-            return
-                "    public function findOrFail(int \$id): {$model};
-
-    public function findById(int \$id): ?{$model};
-
-    public function create(array \$data): {$model};
-
-    public function update(int \$id, array \$data): {$model};
-
-    public function delete(int \$id): void;
-";
-        }
-
-        return "    // Define repository methods here.\n";
-    }
-
-    private function eloquentMethods(?string $modelClass): string
-    {
-        if (! $modelClass) {
-            return "    // Eloquent/DB implementation here.\n";
-        }
-
-        $model = $modelClass;
-
-        return
-            "    public function findOrFail(int \$id): {$model}
-    {
-        return {$model}::query()->findOrFail(\$id);
-    }
-
-    public function findById(int \$id): ?{$model}
-    {
-        return {$model}::query()->find(\$id);
-    }
-
-    public function create(array \$data): {$model}
-    {
-        return {$model}::query()->create(\$data);
-    }
-
-    public function update(int \$id, array \$data): {$model}
-    {
-        \$model = {$model}::query()->findOrFail(\$id);
-        \$model->fill(\$data);
-        \$model->save();
-
-        return \$model;
-    }
-
-    public function delete(int \$id): void
-    {
-        {$model}::query()->whereKey(\$id)->delete();
-    }
-";
-    }
-
-    private function cachedMethods(?string $modelClass): string
-    {
-        if (! $modelClass) {
-            return "    // Cached decorator implementation here.\n";
-        }
-
-        $model = $modelClass;
-        $keyPrefix = Str::snake($model);
-
-        return
-            "    public function findOrFail(int \$id): {$model}
-    {
-        return \$this->inner->findOrFail(\$id);
-    }
-
-    public function findById(int \$id): ?{$model}
-    {
-        return Cache::remember(
-            \$this->keyById(\$id),
-            now()->addMinutes(10),
-            fn () => \$this->inner->findById(\$id)
-        );
-    }
-
-    public function create(array \$data): {$model}
-    {
-        \$model = \$this->inner->create(\$data);
-
-        Cache::forget(\$this->keyById((int)\$model->getKey()));
-
-        return \$model;
-    }
-
-    public function update(int \$id, array \$data): {$model}
-    {
-        \$model = \$this->inner->update(\$id, \$data);
-
-        Cache::forget(\$this->keyById(\$id));
-
-        return \$model;
-    }
-
-    public function delete(int \$id): void
-    {
-        \$this->inner->delete(\$id);
-
-        Cache::forget(\$this->keyById(\$id));
-    }
-
-    private function keyById(int \$id): string
-    {
-        return \"{$keyPrefix}:id:{\$id}\";
-    }
-";
-    }
-
-    private function ensureRepositoryServiceProviderExists(): void
+    private function ensureRepositoryServiceProviderExists(): bool
     {
         $providerPath = app_path('Providers/RepositoryServiceProvider.php');
 
-        if (! File::exists($providerPath)) {
-            File::ensureDirectoryExists(app_path('Providers'));
-            File::put($providerPath, $this->repositoryServiceProviderStub());
-            $this->info('Created RepositoryServiceProvider');
-        } else {
-            $this->info('RepositoryServiceProvider already exists');
+        if (File::exists($providerPath)) {
+            return false;
         }
 
+        File::ensureDirectoryExists(app_path('Providers'));
+
+        File::put(
+            $providerPath,
+            $this->stub('provider/repository-provider')
+        );
+
         $this->ensureProviderRegistered();
+
+        return true;
     }
 
     private function ensureProviderRegistered(): void
@@ -420,8 +400,6 @@ PHP;
         $content = File::get($providersFile);
 
         if (str_contains($content, 'App\\Providers\\RepositoryServiceProvider::class')) {
-            $this->info('...and registered in bootstrap/providers.php');
-
             return;
         }
 
@@ -432,27 +410,6 @@ PHP;
         );
 
         File::put($providersFile, $content);
-
-        $this->info('Registered RepositoryServiceProvider in bootstrap/providers.php');
-    }
-
-    private function repositoryServiceProviderStub(): string
-    {
-        return <<<PHP
-<?php
-
-namespace App\Providers;
-
-use Illuminate\Support\ServiceProvider;
-
-class RepositoryServiceProvider extends ServiceProvider
-{
-    public function register(): void
-    {
-        //
-    }
-}
-PHP;
     }
 
     private function appendBindingToRepositoryServiceProvider(string $baseName, bool $withCache): void
@@ -488,19 +445,15 @@ PHP;
 
         $content = $this->ensureUses($content, $uses);
 
-        $binding = $withCache
-            ? <<<PHP
-        \$this->app->bind({$contractClass}::class, function (\$app) {
-            return new {$cacheClass}(
-                \$app->make({$repositoryClass}::class)
-            );
-        });
+        $binding = $this->stub(
+            $withCache ? 'provider/binding-cached' : 'provider/binding-plain',
+            [
+                'contract' => $contractClass,
+                'repository' => $repositoryClass,
+                'cache' => $cacheClass,
+            ]
+        );
 
-PHP
-            : <<<PHP
-        \$this->app->bind({$contractClass}::class, {$repositoryClass}::class);
-
-PHP;
         $content = $this->insertIntoRegisterMethod($content, $binding);
 
         File::put($providerPath, $content);
@@ -568,9 +521,7 @@ PHP;
         if (preg_match($pattern1, $content)) {
             return preg_replace_callback(
                 $pattern1,
-                function () use ($bindingBlock) {
-                    return "public function register(): void\n    {\n".$bindingBlock;
-                },
+                fn () => "public function register(): void\n    {\n".$bindingBlock,
                 $content,
                 1
             );
@@ -580,11 +531,36 @@ PHP;
 
         return preg_replace_callback(
             $pattern2,
-            function ($m) use ($bindingBlock) {
-                return $m[1].$bindingBlock;
-            },
+            fn ($m) => $m[1].$bindingBlock,
             $content,
             1
         );
+    }
+
+    private function stub(string $name, array $vars = []): string
+    {
+        $path = $this->stubsPath().'/'.$name.'.stub';
+
+        if (! File::exists($path)) {
+            throw new \RuntimeException("Stub not found: {$path}");
+        }
+
+        $content = File::get($path);
+
+        foreach ($vars as $key => $value) {
+            $content = str_replace('{{ '.$key.' }}', (string) $value, $content);
+        }
+
+        return $content;
+    }
+
+    private function stubsPath(): string
+    {
+        return __DIR__.'/stubs';
+    }
+
+    private function isPest(): bool
+    {
+        return File::exists(base_path('tests/Pest.php'));
     }
 }

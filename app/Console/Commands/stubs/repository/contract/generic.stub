@@ -1,0 +1,8 @@
+<?php
+
+namespace App\Repositories\Contracts;
+
+interface {{ contract_class }}
+{
+    // Define repository methods here
+}

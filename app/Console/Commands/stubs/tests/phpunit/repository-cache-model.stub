@@ -1,0 +1,41 @@
+<?php
+
+namespace Tests\Unit\Repositories;
+
+use App\Repositories\Contracts\{{ contract_class }};
+use App\Repositories\Implementations\Cached\{{ cache_class }};
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Mockery;
+use Tests\TestCase;
+
+class {{ cache_test_class }} extends TestCase
+{
+    public function test_it_caches_reads_and_delegates(): void
+    {
+        $inner = Mockery::mock({{ contract_class }}::class);
+        $repo = new {{ cache_class }}($inner);
+
+        Cache::shouldReceive('remember')->once()->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+        $inner->shouldReceive('findById')->once()->with(123)->andReturn(null);
+        $this->assertNull($repo->findById(123));
+
+        Cache::shouldReceive('remember')->once()->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+        $inner->shouldReceive('getAll')->once()->andReturn(collect());
+        $this->assertInstanceOf(Collection::class, $repo->getAll());
+    }
+
+    public function test_it_flushes_on_delete(): void
+    {
+        $inner = Mockery::mock({{ contract_class }}::class);
+        $repo = new {{ cache_class }}($inner);
+
+        Cache::shouldReceive('has')->andReturnTrue();
+        Cache::shouldReceive('increment')->atLeast()->once();
+        Cache::shouldReceive('forget')->atLeast()->once();
+
+        $inner->shouldReceive('delete')->once()->with(123)->andReturnTrue;
+
+        $this->assertTrue($repo->delete(123));
+    }
+}

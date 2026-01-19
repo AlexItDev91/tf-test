@@ -1,0 +1,13 @@
+<?php
+
+namespace App\Repositories\Implementations\Cached;
+
+use App\Repositories\Contracts\{{ contract_class }};
+use Illuminate\Support\Facades\Cache;
+
+class {{ cache_class }} implements {{ contract_class }}
+{
+    public function __construct(
+        private readonly {{ contract_class }} $inner
+    ) {}
+}

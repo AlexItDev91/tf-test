@@ -1,0 +1,50 @@
+<?php
+
+namespace Tests\Feature\Repositories;
+
+use App\Repositories\Implementations\Eloquent\{{ repository_class }};
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
+use Tests\TestCase;
+
+class {{ eloquent_test_class }} extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_find_by_id_returns_null_when_missing(): void
+    {
+        $repo = new {{ repository_class }}();
+
+        $this->assertNull($repo->findById(999999999));
+    }
+
+    public function test_find_or_fail_throws_when_missing(): void
+    {
+        $this->expectException(ModelNotFoundException::class);
+
+        $repo = new {{ repository_class }}();
+        $repo->findOrFail(999999999);
+    }
+
+    public function test_get_all_and_get_return_collection(): void
+    {
+        $repo = new {{ repository_class }}();
+
+        $this->assertInstanceOf(Collection::class, $repo->getAll());
+        $this->assertInstanceOf(Collection::class, $repo->get(limit: 50, offset: 0));
+    }
+
+    public function test_paginate_returns_paginator(): void
+    {
+        $repo = new {{ repository_class }}();
+
+        $this->assertInstanceOf(LengthAwarePaginator::class, $repo->paginate(perPage: 15));
+    }
+
+    public function test_create_update_delete_is_incomplete(): void
+    {
+        $this->markTestIncomplete('Provide required fields payload for {{ model }} and enable this test.');
+    }
+}

@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Repositories\Implementations\Cached;
+
+use App\Repositories\Contracts\{{ contract_class }};
+use Illuminate\Support\Facades\Cache;
+{{ model_use }}
+
+class {{ cache_class }} implements {{ contract_class }}
+{
+    private const CACHE_LIFETIME_MINUTES = 10;
+    private const CACHE_VERSION_TTL_MINUTES = 1440;
+
+    public function __construct(
+        private readonly {{ contract_class }} $inner
+    ) {}
+
+    public function findOrFail(int $id): {{ model }}
+    {
+        return $this->inner->findOrFail($id);
+    }
+
+    public function findById(int $id): ?{{ model }}
+    {
+        return Cache::remember(
+            $this->keyById($id),
+            now()->addMinutes(self::CACHE_LIFETIME_MINUTES),
+            fn () => $this->inner->findById($id)
+        );
+    }
+
+    public function getAll(): \Illuminate\Support\Collection
+    {
+        return Cache::remember(
+            $this->keyAll(),
+            now()->addMinutes(self::CACHE_LIFETIME_MINUTES),
+            fn () => $this->inner->getAll()
+        );
+    }
+
+    public function get(int $limit = 50, int $offset = 0): \Illuminate\Support\Collection
+    {
+        return Cache::remember(
+            $this->keyList($limit, $offset),
+            now()->addMinutes(self::CACHE_LIFETIME_MINUTES),
+            fn () => $this->inner->get($limit, $offset)
+        );
+    }
+
+    public function paginate(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        return $this->inner->paginate($perPage);
+    }
+
+    public function create(array $data): {{ model }}
+    {
+        $model = $this->inner->create($data);
+        $this->flushAfterWrite((int) $model->getKey());
+
+        return $model;
+    }
+
+    public function update(int $id, array $data): {{ model }}
+    {
+        $model = $this->inner->update($id, $data);
+        $this->flushAfterWrite($id);
+
+        return $model;
+    }
+
+    public function delete(int $id): bool
+    {
+        $ok = $this->inner->delete($id);
+
+        if ($ok) {
+            $this->flushAfterWrite($id);
+        }
+
+        return $ok;
+    }
+
+    private function flushAfterWrite(int $id): void
+    {
+        $this->bumpVersion();
+        Cache::forget($this->keyById($id));
+    }
+
+    private function version(): int
+    {
+        return (int) Cache::get($this->versionKey(), 1);
+    }
+
+    private function bumpVersion(): void
+    {
+        $key = $this->versionKey();
+
+        if (! Cache::has($key)) {
+            Cache::put($key, 1, now()->addMinutes(self::CACHE_VERSION_TTL_MINUTES));
+            return;
+        }
+
+        Cache::increment($key);
+    }
+
+    private function versionKey(): string
+    {
+        return '{{ cache_prefix }}:cache:v';
+    }
+
+    private function keyById(int $id): string
+    {
+        return 'v'.$this->version().':{{ cache_prefix }}:id:'.$id;
+    }
+
+    private function keyAll(): string
+    {
+        return 'v'.$this->version().':{{ cache_prefix }}:all';
+    }
+
+    private function keyList(int $limit, int $offset): string
+    {
+        return 'v'.$this->version().':{{ cache_prefix }}:list:'.$limit.':'.$offset;
+    }
+}

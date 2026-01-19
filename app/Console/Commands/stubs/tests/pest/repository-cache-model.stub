@@ -1,0 +1,50 @@
+<?php
+
+use App\Repositories\Contracts\{{ contract_class }};
+use App\Repositories\Implementations\Cached\{{ cache_class }};
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+
+afterEach(function () {
+    Mockery::close();
+});
+
+it('caches read methods and delegates to inner', function () {
+    $inner = Mockery::mock({{ contract_class }}::class);
+    $repo = new {{ cache_class }}($inner);
+
+    // Versioning: key builders call Cache::get(versionKey, 1)
+    Cache::shouldReceive('get')->andReturn(1);
+
+    Cache::shouldReceive('remember')
+        ->times(3)
+        ->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+
+    $inner->shouldReceive('findById')->once()->with(123)->andReturn(null);
+    expect($repo->findById(123))->toBeNull();
+
+    $inner->shouldReceive('getAll')->once()->andReturn(collect());
+    expect($repo->getAll())->toBeInstanceOf(Collection::class);
+
+    $inner->shouldReceive('get')->once()->with(50, 0)->andReturn(collect());
+    expect($repo->get(limit: 50, offset: 0))->toBeInstanceOf(Collection::class);
+});
+
+it('flushes cache on delete', function () {
+    $inner = Mockery::mock({{ contract_class }}::class);
+    $repo = new {{ cache_class }}($inner);
+
+    // Versioning: key builders call Cache::get(versionKey, 1)
+    Cache::shouldReceive('get')->andReturn(1);
+
+    // bumpVersion(): has? -> increment()
+    Cache::shouldReceive('has')->once()->andReturnTrue();
+    Cache::shouldReceive('increment')->once();
+
+    // flushAfterWrite(): forget keyById(...)
+    Cache::shouldReceive('forget')->once();
+
+    $inner->shouldReceive('delete')->once()->with(123)->andReturn(true);
+
+    expect($repo->delete(123))->toBeTrue();
+});

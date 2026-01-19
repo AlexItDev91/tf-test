@@ -1,0 +1,19 @@
+<?php
+
+namespace Tests\Feature\Repositories;
+
+use App\Repositories\Implementations\Eloquent\{{ repository_class }};
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class {{ eloquent_test_class }} extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_it_can_be_instantiated(): void
+    {
+        $repo = new {{ repository_class }}();
+
+        $this->assertIsObject($repo);
+    }
+}

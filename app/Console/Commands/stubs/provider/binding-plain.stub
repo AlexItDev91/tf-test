@@ -1,0 +1,1 @@
+        $this->app->bind({{ contract }}::class, {{ repository }}::class);

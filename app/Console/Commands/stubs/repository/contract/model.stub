@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Repositories\Contracts;
+
+use App\Models\{{ model }};
+
+interface {{ contract_class }}
+{
+    public function findOrFail(int $id): {{ model }};
+
+    public function findById(int $id): ?{{ model }};
+
+    public function getAll(): \Illuminate\Support\Collection;
+
+    public function get(int $limit = 50, int $offset = 0): \Illuminate\Support\Collection;
+
+    public function paginate(int $perPage = 15): \Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+    public function create(array $data): {{ model }};
+
+    public function update(int $id, array $data): {{ model }};
+
+    public function delete(int $id): bool;
+}
