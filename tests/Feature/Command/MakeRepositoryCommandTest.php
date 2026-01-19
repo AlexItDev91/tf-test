@@ -17,7 +17,7 @@ afterEach(function () {
 });
 
 it('generates contract eloquent and cached repositories and binds provider', function () {
-    artisan('make:app-repository TestPest')
+    artisan('make:repository TestPest')
         ->assertExitCode(0);
 
     expect(app_path('Repositories/Contracts/TestPestRepositoryContract.php'))->toBeFile()
@@ -42,7 +42,7 @@ it('generates contract eloquent and cached repositories and binds provider', fun
 });
 
 it('generates repository without cache when --no-cache is used', function () {
-    $this->artisan('make:app-repository TestPest --no-cache')
+    $this->artisan('make:repository TestPest --no-cache')
         ->assertExitCode(0);
 
     expect(app_path('Repositories/Implementations/Cached/TestPestCacheRepository.php'))->not->toBeFile();
@@ -56,8 +56,8 @@ it('generates repository without cache when --no-cache is used', function () {
 });
 
 it('does not duplicate bindings or use statements on second run', function () {
-    $this->artisan('make:app-repository', ['name' => 'TestPest'])->assertExitCode(0);
-    $this->artisan('make:app-repository', ['name' => 'TestPest'])->assertExitCode(0);
+    $this->artisan('make:repository', ['name' => 'TestPest'])->assertExitCode(0);
+    $this->artisan('make:repository', ['name' => 'TestPest'])->assertExitCode(0);
 
     $provider = File::get(app_path('Providers/RepositoryServiceProvider.php'));
 
