@@ -154,7 +154,7 @@ class MakeRepositoryCommand extends Command
             'model_use' => $modelClass ? "use App\\Models\\{$modelClass};" : '',
 
             // cache key prefix: prefer model name, fallback to base
-            'key_prefix' => Str::snake($modelClass ?: $baseName),
+            'cache_prefix' => Str::snake($modelClass ?: $baseName),
 
             // test helpers
             'eloquent_test_class' => $baseName.'RepositoryTest',
@@ -561,6 +561,8 @@ class MakeRepositoryCommand extends Command
 
     private function isPest(): bool
     {
+        return false;
+
         return File::exists(base_path('tests/Pest.php'));
     }
 }

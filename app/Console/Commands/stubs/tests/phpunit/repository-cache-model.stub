@@ -9,32 +9,58 @@ use Illuminate\Support\Facades\Cache;
 use Mockery;
 use Tests\TestCase;
 
-class {{ cache_test_class }} extends TestCase
+class {{ cache_class }}Test extends TestCase
 {
-    public function test_it_caches_reads_and_delegates(): void
+    protected function tearDown(): void
+    {
+        Mockery::close();
+
+        parent::tearDown();
+    }
+
+    public function test_it_caches_read_methods_and_delegates_to_inner(): void
     {
         $inner = Mockery::mock({{ contract_class }}::class);
         $repo = new {{ cache_class }}($inner);
 
-        Cache::shouldReceive('remember')->once()->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+        Cache::shouldReceive('get')->zeroOrMoreTimes()->andReturn(1);
+
+        Cache::shouldReceive('remember')
+            ->once()
+            ->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+
         $inner->shouldReceive('findById')->once()->with(123)->andReturn(null);
         $this->assertNull($repo->findById(123));
 
-        Cache::shouldReceive('remember')->once()->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+        Cache::shouldReceive('remember')
+            ->once()
+            ->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+
         $inner->shouldReceive('getAll')->once()->andReturn(collect());
         $this->assertInstanceOf(Collection::class, $repo->getAll());
+
+        Cache::shouldReceive('remember')
+            ->once()
+            ->andReturnUsing(fn ($key, $ttl, $cb) => $cb());
+
+        $inner->shouldReceive('get')->once()->with(50, 0)->andReturn(collect());
+        $this->assertInstanceOf(Collection::class, $repo->get(limit: 50, offset: 0));
+
+        $inner->shouldReceive('paginate')->once()->with(15)->andReturn(Mockery::mock(\Illuminate\Contracts\Pagination\LengthAwarePaginator::class));
+        $this->assertInstanceOf(\Illuminate\Contracts\Pagination\LengthAwarePaginator::class, $repo->paginate(perPage: 15));
     }
 
-    public function test_it_flushes_on_delete(): void
+    public function test_it_flushes_cache_on_delete(): void
     {
         $inner = Mockery::mock({{ contract_class }}::class);
         $repo = new {{ cache_class }}($inner);
 
-        Cache::shouldReceive('has')->andReturnTrue();
-        Cache::shouldReceive('increment')->atLeast()->once();
+        Cache::shouldReceive('has')->once()->andReturnTrue();
+        Cache::shouldReceive('increment')->once();
         Cache::shouldReceive('forget')->atLeast()->once();
+        Cache::shouldReceive('get')->zeroOrMoreTimes()->andReturn(1);
 
-        $inner->shouldReceive('delete')->once()->with(123)->andReturnTrue;
+        $inner->shouldReceive('delete')->once()->with(123)->andReturn(true);
 
         $this->assertTrue($repo->delete(123));
     }

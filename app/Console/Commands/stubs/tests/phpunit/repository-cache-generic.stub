@@ -7,14 +7,20 @@ use App\Repositories\Implementations\Cached\{{ cache_class }};
 use Mockery;
 use Tests\TestCase;
 
-class {{ cache_test_class }} extends TestCase
+class {{ cache_class }}Test extends TestCase
 {
-    public function test_it_delegates_to_inner(): void
+    protected function tearDown(): void
+    {
+        Mockery::close();
+
+        parent::tearDown();
+    }
+
+    public function test_it_can_be_instantiated(): void
     {
         $inner = Mockery::mock({{ contract_class }}::class);
-
         $repo = new {{ cache_class }}($inner);
 
-        $this->assertIsObject($repo);
+        $this->assertInstanceOf({{ cache_class }}::class, $repo);
     }
 }

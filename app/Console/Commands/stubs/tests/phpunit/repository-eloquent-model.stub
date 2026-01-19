@@ -9,7 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Tests\TestCase;
 
-class {{ eloquent_test_class }} extends TestCase
+class {{ repository_class }}Test extends TestCase
 {
     use RefreshDatabase;
 
@@ -41,10 +41,5 @@ class {{ eloquent_test_class }} extends TestCase
         $repo = new {{ repository_class }}();
 
         $this->assertInstanceOf(LengthAwarePaginator::class, $repo->paginate(perPage: 15));
-    }
-
-    public function test_create_update_delete_is_incomplete(): void
-    {
-        $this->markTestIncomplete('Provide required fields payload for {{ model }} and enable this test.');
     }
 }
