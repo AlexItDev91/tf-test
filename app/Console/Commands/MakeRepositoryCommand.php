@@ -561,8 +561,6 @@ class MakeRepositoryCommand extends Command
 
     private function isPest(): bool
     {
-        return false;
-
         return File::exists(base_path('tests/Pest.php'));
     }
 }
