@@ -12,7 +12,7 @@ use function Laravel\Prompts\text;
 class MakeRepositoryCommand extends Command
 {
     protected $signature = 'make:app-repository
-         {name? : Repository name (e.g. ProductRepository or Product)}
+        {name? : Repository name (e.g. ProductRepository or Product)}
         {--model= : Optional model class name (e.g. Product)}
         {--no-cache : Do not generate Cached implementation}
         {--force : Overwrite existing files}';
