@@ -6,7 +6,6 @@ use App\Events\ProductStockChanged;
 use App\Models\Product;
 use App\Repositories\Contracts\ProductRepositoryContract;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class ProductRepository implements ProductRepositoryContract
 {

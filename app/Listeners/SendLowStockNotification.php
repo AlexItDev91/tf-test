@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Events\ProductStockChanged;
 use App\Jobs\SendLowStockNotificationJob;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class SendLowStockNotification
 {

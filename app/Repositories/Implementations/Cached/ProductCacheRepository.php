@@ -81,12 +81,14 @@ class ProductCacheRepository implements ProductRepositoryContract
     private function keyActiveProduct(int $id): string
     {
         $v = $this->version();
+
         return "v{$v}:product:active:{$id}";
     }
 
     private function keyActiveList(int $limit, int $offset): string
     {
         $v = $this->version();
+
         return "v{$v}:products:active:list:limit:{$limit}:offset:{$offset}";
     }
 
@@ -99,6 +101,7 @@ class ProductCacheRepository implements ProductRepositoryContract
     {
         if (! Cache::has('products:cache:v')) {
             Cache::put('products:cache:v', 1, now()->addDay());
+
             return;
         }
         Cache::increment('products:cache:v');

@@ -109,6 +109,7 @@ it('completes full flow: auth → cart → checkout → low stock mail → daily
         SendDailySalesReportJob::class,
         function (SendDailySalesReportJob $job) {
             $this->app->call([$job, 'handle']);
+
             return true;
         }
     );
