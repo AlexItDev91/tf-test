@@ -6,10 +6,13 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\text;
+
 class MakeRepositoryCommand extends Command
 {
     protected $signature = 'make:app-repository
-        {name : Repository name (e.g. ProductRepository or Product)}
+         {name? : Repository name (e.g. ProductRepository or Product)}
         {--model= : Optional model class name (e.g. Product)}
         {--no-cache : Do not generate Cached implementation}
         {--force : Overwrite existing files}';
@@ -18,20 +21,97 @@ class MakeRepositoryCommand extends Command
 
     public function handle(): int
     {
-        $inputName = Str::studly($this->argument('name'));
+        $input = $this->resolveInput();
+
+        return $this->generate(
+            baseName: $input['baseName'],
+            modelClass: $input['modelClass'],
+            withCache: $input['withCache'],
+            force: $input['force'],
+        );
+    }
+
+    private function resolveInput(): array
+    {
+        $name = trim((string) ($this->argument('name') ?? ''));
+        $hasName = $name !== '';
+
+        $force = (bool) $this->option('force');
+        $withCache = ! $this->option('no-cache');
+
+        $model = $this->option('model');
+        $model = is_string($model) ? trim($model) : '';
+
+        if (! $hasName) {
+            return $this->wizard();
+        }
+
+        $inputName = Str::studly($name);
         $baseName = $this->normalizeBaseName($inputName);
 
+        return [
+            'baseName' => $baseName,
+            'modelClass' => $model !== '' ? Str::studly($model) : null,
+            'withCache' => $withCache,
+            'force' => $force,
+        ];
+    }
+
+    private function wizard(): array
+    {
+        $name = text(
+            label: 'Repository name',
+            placeholder: 'E.g. Product or ProductRepository',
+            required: true
+        );
+
+        $inputName = Str::studly($name);
+        $baseName = $this->normalizeBaseName($inputName);
+
+        $model = text(
+            label: 'Which model should this repository use?',
+            placeholder: 'E.g. Product or leave empty',
+            required: false,
+            hint: 'Leave empty if repository is not tied to a model'
+        );
+
+        $modelClass = $model !== '' ? Str::studly($model) : null;
+
+        $withCache = confirm(
+            label: 'Generate Cached implementation?',
+            default: true
+        );
+
+        // проверка существующих файлов
+        $paths = $this->paths($baseName);
+        $force = (bool) $this->option('force');
+
+        if (! $force && (
+            File::exists($paths['contract']) ||
+            File::exists($paths['eloquent']) ||
+            ($withCache && File::exists($paths['cached']))
+        )) {
+            $force = confirm(
+                label: 'Some files already exist. Overwrite?',
+                default: false
+            );
+        }
+
+        return [
+            'baseName' => $baseName,
+            'modelClass' => $modelClass,
+            'withCache' => $withCache,
+            'force' => $force,
+        ];
+    }
+
+    private function generate(string $baseName, ?string $modelClass, bool $withCache, bool $force): int
+    {
         $repositoryClass = $baseName.'Repository';
         $contractClass = $baseName.'RepositoryContract';
         $cacheClass = $baseName.'CacheRepository';
 
-        $model = $this->option('model');
-        $modelClass = $model ? Str::studly($model) : null;
-
         $paths = $this->paths($baseName);
-
-        $force = (bool) $this->option('force');
-        $withCache = ! $this->option('no-cache');
 
         $this->ensureDirectories($withCache);
 
@@ -341,6 +421,7 @@ PHP;
 
         if (str_contains($content, 'App\\Providers\\RepositoryServiceProvider::class')) {
             $this->info('...and registered in bootstrap/providers.php');
+
             return;
         }
 
@@ -488,7 +569,7 @@ PHP;
             return preg_replace_callback(
                 $pattern1,
                 function () use ($bindingBlock) {
-                    return "public function register(): void\n    {\n" . $bindingBlock;
+                    return "public function register(): void\n    {\n".$bindingBlock;
                 },
                 $content,
                 1
@@ -500,7 +581,7 @@ PHP;
         return preg_replace_callback(
             $pattern2,
             function ($m) use ($bindingBlock) {
-                return $m[1] . $bindingBlock;
+                return $m[1].$bindingBlock;
             },
             $content,
             1
